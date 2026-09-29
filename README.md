@@ -11,11 +11,11 @@ Login on Kali and Ubuntu: **`stud` / `stud`**.
 
 ## What you need
 - VirtualBox 7.2 (or newer) on an amd64 (Intel/AMD) computer
-- About 40 GB of free disk space: Kali and Ubuntu take about 26 GB after import (33 GB with the second Ubuntu for lab 9) and grow as you use them; the downloaded `.ova` files (about 11 GB) can be deleted after import
+- About 50 GB of free disk space: Kali and Ubuntu take about 26 GB after import (33 GB with the second Ubuntu for lab 9) and grow as you use them; the downloaded `.ova` files (about 11 GB) can be deleted after import
 - Each VM is set to 4 GB RAM. Lab 9 runs three VMs at once; if your computer has less memory, lower the RAM of the Ubuntu VMs in their settings.
 
 ## Option 1: ready-made VMs (recommended)
-Install VirtualBox first. Then run one command; do not download the `.ova` files in the browser. The command:
+Install [VirtualBox 7.2 or newer](https://www.virtualbox.org/wiki/Downloads) first. Then run one command; do not download the `.ova` files in the browser. The command:
 - downloads the VMs from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) (about 11 GB) into `Downloads/cyberlab-vms`
 - checks them against `SHA256SUMS` and downloads damaged parts again
 - creates the VirtualBox NAT Network **Lab NAT Network** (`172.16.96.0/24`), which all lab VMs use
