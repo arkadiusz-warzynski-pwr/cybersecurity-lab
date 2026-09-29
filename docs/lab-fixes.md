@@ -5,7 +5,7 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 
 ## General
 - [x] The user on both Kali and Ubuntu is `stud` (home `/home/stud`). The PDFs also say `kali`, `student` and `server`.
-- [x] The lab network is the VirtualBox NAT Network **Lab NAT Network**, `172.16.96.0/24`, as labs 9, 11 and 12 already say. The Kali OVA is attached to it. Add a setup step telling students to create it first (`VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`); the Ubuntu and Metasploitable VMs must use the same network.
+- [x] The lab network is the VirtualBox NAT Network **Lab NAT Network**, `172.16.96.0/24`, as labs 9, 11 and 12 already say. The Kali OVA is attached to it. Add a setup step telling students to create it first (`VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`); the Ubuntu VMs must use the same network. The download scripts from the README create it automatically.
 - [x] Several commands contain en dashes (`–`) instead of `--`, which break when copied (lab 7 gpg commands, lab 12 `nmap –p1-65535 –A`).
 
 ## Lab 6
