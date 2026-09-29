@@ -38,7 +38,7 @@ if (Test-Path $ova) { throw "$ova already exists" }
 # nomacs: every import gets new MAC addresses, so two copies (Ubuntu A and B)
 # can share the NAT Network
 $exportArgs = @('export', $VmName, '--output', $ova, '--ovf20', '--options', 'manifest,nomacs',
-                '--vsys', '0', '--vmname', $Name, '--product', 'Cyberbezpieczenstwo',
+                '--vsys', '0', '--vmname', $Name, '--product', 'Cybersecurity',
                 '--description', 'Login: stud / stud')
 if ($Version) { $exportArgs += @('--version', $Version) }
 & $vbm @exportArgs

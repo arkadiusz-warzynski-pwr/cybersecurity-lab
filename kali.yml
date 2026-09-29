@@ -1,5 +1,5 @@
 ---
-# Course Kali VM for Cyberbezpieczeństwo labs 6-14.
+# Course Kali VM for Cybersecurity labs 6-14.
 # Students (own Kali):  sudo ansible-pull -U https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab.git kali.yml -e course_user=$USER
 # Instructor (OVA):     run on a fresh Kali VM, then build/seal.yml, then build/export.ps1
 - name: Configure course Kali VM
