@@ -1,6 +1,6 @@
-# Cybersecurity – lab VMs 2026-2027
+# Cybersecurity – lab VMs
 
-Virtual machines for the Cyberbezpieczeństwo labs 6–14.
+Virtual machines for the Cybersecurity labs 6–14.
 
 | VM | Used in |
 |---|---|
