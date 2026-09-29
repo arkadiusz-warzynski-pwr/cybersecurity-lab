@@ -1,6 +1,6 @@
 # Cyberbezpieczeństwo – course VMs
 
-Ansible playbooks that turn a stock Kali Linux and a stock Ubuntu into the course VMs for labs 6–14. The same playbooks run on amd64 and arm64 (Apple Silicon).
+Ansible playbooks that turn a stock Kali Linux and a stock Ubuntu into the course VMs for labs 6–14. The playbooks are written for amd64 and arm64 (Apple Silicon); so far they are tested on amd64 only.
 
 | Playbook | VM | Used in |
 |---|---|---|
@@ -10,14 +10,16 @@ Ansible playbooks that turn a stock Kali Linux and a stock Ubuntu into the cours
 Metasploitable 2 (labs 8, 10–12) is used as distributed.
 
 ## Two ways to get the VMs
-**A. Ready-made OVAs (default).** Import the published `.ova` files into VirtualBox and log in as `stud` / `stud`. The Ubuntu VM starts as client A (hostname `ubuntu-a`). Lab 9 needs a second Ubuntu: clone the VM in VirtualBox (*Generate new MAC addresses for all network adapters*) or import the OVA a second time, then run `sudo lab-client B` in the copy. It becomes `ubuntu-b` with the client B VPN files, a new machine ID and new SSH host keys, and restarts.
+### Option 1: ready-made VMs (recommended)
+Import the published `.ova` files into VirtualBox and log in as `stud` / `stud`. The Ubuntu VM starts as client A (hostname `ubuntu-a`). Lab 9 needs a second Ubuntu: clone the VM in VirtualBox (*Generate new MAC addresses for all network adapters*) or import the OVA a second time, then run `sudo lab-client B` in the copy. It becomes `ubuntu-b` with the client B VPN files, a new machine ID and new SSH host keys, and restarts.
 All lab VMs are attached to the VirtualBox NAT Network **Lab NAT Network** (`172.16.96.0/24`). Create it once before starting the VMs, otherwise VirtualBox refuses to start them:
 ```
 VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on
 ```
 (or in VirtualBox: *File → Tools → Network Manager → NAT Networks → Create*, with the same name and prefix).
 
-**C. Your own Kali / Ubuntu.** Run inside the VM:
+### Option 2: your own Kali / Ubuntu
+Run inside the VM:
 ```bash
 sudo apt update && sudo apt install -y ansible-core git
 sudo ansible-pull -U https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab.git kali.yml -e course_user=$USER     # or ubuntu.yml
@@ -55,8 +57,8 @@ Shared settings are in `group_vars/all.yml`, per-VM settings at the top of each 
 Every VM gets the same lab 9 keys. `roles/openvpn/files/` holds the Kali server side and `roles/vpn_clients/files/` the Ubuntu clients (A and B). These keys are for the isolated lab network only and are public on purpose, since every student receives them in the VMs anyway; never use them for anything else. The CA private key is **not** in this repo; the instructor keeps it separately.
 
 ## Status
-- [x] Kali 2026.2 (amd64): build, seal, export (import of a trial export tested)
+- [x] Kali 2026.2 (amd64): build, seal, export
 - [x] Lab 9 end to end with Kali + Ubuntu A + Ubuntu B (all four cipher settings, A↔B netcat and file transfer)
 - [x] Ubuntu 26.04 (amd64): single OVA with `lab-client`, build, clone test (`lab-client B`: new hostname, machine ID, host keys, IP; stays B on playbook re-run), seal, export
-- [ ] Import test of the final OVAs (Ubuntu imported twice, one switched to B, on the Lab NAT Network)
+- [x] Import test of the final OVAs: both boot to the login screen and get addresses on the Lab NAT Network
 - [ ] Test on arm64 (Mac)
