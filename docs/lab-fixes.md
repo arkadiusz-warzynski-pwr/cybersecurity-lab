@@ -36,6 +36,12 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 ## Lab 11
 - [x] `amap` and Zenmap are installed.
 
+## Lab 12 (Metasploitable 2)
+- [x] Metasploitable 2 is **not** distributed in the release. Under "required VMs", students are told to download the official image (https://sourceforge.net/projects/metasploitable/) and attach it to the **Lab NAT Network** (same network as Kali).
+- [x] En dashes fixed in `nmap –p1-65535 –A`, `uname –r`, `gcc … –o exploit` → `--`/`-`.
+- [x] Typo: `vsftd` → `vsftpd`.
+- [ ] The distcc/udev exploit walkthrough (steps and CVE-2009-1185) is unchanged; retest end to end against Kali 2026.2 and a current Metasploitable 2 before the semester.
+
 ## Labs 13-14 (Juice Shop 20.2.0)
 - [x] Juice Shop is in `~/Desktop/juice-shop`; start it with `npm start` and open `localhost:3000`.
 - [ ] Walk through every step against 20.2.0. The labs were written for an older version. `main-es2015.js` is probably `main.js` now, and ZAP 2.16 renamed its proxy options.
