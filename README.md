@@ -21,7 +21,18 @@ Login on Kali and Ubuntu: **`stud` / `stud`**.
    VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on
    ```
    Or in VirtualBox: *File → Tools → Network Manager → NAT Networks → Create*, with the same name and prefix.
-2. **Download** the `.ova` files from the [Releases](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases) page.
+2. **Download** from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) all `.part` files and `SHA256SUMS` into one folder. GitHub limits files to 2 GB, so each VM is split into parts. **Join** them:
+   - Windows (Command Prompt; in PowerShell put `cmd /c` in front):
+     ```
+     copy /b Kali-Lab-2026-2027-amd64.ova.part1 + Kali-Lab-2026-2027-amd64.ova.part2 + Kali-Lab-2026-2027-amd64.ova.part3 + Kali-Lab-2026-2027-amd64.ova.part4 Kali-Lab-2026-2027-amd64.ova
+     copy /b Ubuntu-Lab-2026-2027-amd64.ova.part1 + Ubuntu-Lab-2026-2027-amd64.ova.part2 Ubuntu-Lab-2026-2027-amd64.ova
+     ```
+   - Linux / macOS:
+     ```
+     cat Kali-Lab-2026-2027-amd64.ova.part* > Kali-Lab-2026-2027-amd64.ova
+     cat Ubuntu-Lab-2026-2027-amd64.ova.part* > Ubuntu-Lab-2026-2027-amd64.ova
+     ```
+   **Check** the files against `SHA256SUMS`: on Linux `sha256sum -c SHA256SUMS`, on macOS `shasum -a 256 -c SHA256SUMS`, on Windows (PowerShell) `Get-FileHash Kali-Lab-2026-2027-amd64.ova` and compare with the value in `SHA256SUMS`. Every line must be `OK` or the hash must match; otherwise download the damaged part again. Afterwards the `.part` files can be deleted.
 3. **Import** each file: *File → Import Appliance*.
 4. **Second Ubuntu for lab 9:** clone the Ubuntu VM (*Clone → Generate new MAC addresses for all network adapters*) or import the Ubuntu OVA a second time. Start the copy, log in and run:
    ```bash
