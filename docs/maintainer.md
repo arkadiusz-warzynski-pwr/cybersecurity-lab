@@ -44,6 +44,15 @@ Shared settings are in `group_vars/all.yml`, per-VM settings at the top of each 
    .\build\export.ps1 -VmName <ubuntu build VM> -Name "Ubuntu Lab 2026-2027" -Version 26.04.1
    ```
 
+### Apple Silicon (arm64)
+The playbooks choose the architecture themselves; all Kali and Ubuntu packages and the Juice Shop build exist for arm64 (checked 2026-09-29). Only the Ubuntu guest additions package is amd64-only, so on arm64 it is skipped.
+1. On the Mac: VirtualBox 7.2 for Apple Silicon, and the same NAT Network (`VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`).
+2. Quick test: install Kali (arm64 installer ISO) and Ubuntu 26.04.1 (arm64 desktop ISO), then run Option 2 from the README (`ansible-pull`) in both and go through lab 9.
+3. OVAs: build as above. For Kali from the installer, create the build user `kali` during installation (or pass `-e build_user=<name>` to `seal.yml`). Export with PowerShell 7 (`brew install --cask powershell`); the script names the files `…-arm64.ova` by itself:
+   ```
+   pwsh ./build/export.ps1 -VmName <kali build VM> -Name "Kali Lab 2026-2027" -Version 2026.2 -OutDir ~/ova
+   ```
+
 ### Pitfalls from the 2026 build
 - Take VirtualBox snapshots only with the VM powered off; live snapshots hung on the build host.
 - After `seal.yml` has started, new SSH connections fail (the host keys are deleted). Stream its log over a connection opened before.
