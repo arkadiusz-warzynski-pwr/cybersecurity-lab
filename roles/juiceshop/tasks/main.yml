@@ -1,0 +1,72 @@
+---
+# Installs the prebuilt Juice Shop release matching the installed Node major
+# version and CPU architecture. Labs 13-14: cd ~/Desktop/juice-shop && npm start
+- name: Read Node.js major version
+  ansible.builtin.command: node -p "process.versions.node.split('.')[0]"
+  register: node_major
+  changed_when: false
+
+- name: Check a prebuilt Juice Shop package exists for this Node version
+  ansible.builtin.assert:
+    that: node_major.stdout in ['22', '24', '26']
+    fail_msg: >-
+      Node {{ node_major.stdout }} has no prebuilt Juice Shop {{ juiceshop_version }} package
+      (available: 22, 24, 26).
+
+- name: Set Juice Shop package name
+  ansible.builtin.set_fact:
+    juiceshop_pkg: >-
+      juice-shop-{{ juiceshop_version }}_node{{ node_major.stdout }}_linux_{{ 'arm64' if deb_arch == 'arm64' else 'x64' }}.tgz
+
+- name: Download Juice Shop {{ juiceshop_version }}
+  ansible.builtin.get_url:
+    url: "https://github.com/juice-shop/juice-shop/releases/download/v{{ juiceshop_version }}/{{ juiceshop_pkg }}"
+    checksum: "md5:https://github.com/juice-shop/juice-shop/releases/download/v{{ juiceshop_version }}/{{ juiceshop_pkg }}.md5"
+    dest: "/var/cache/{{ juiceshop_pkg }}"
+    mode: "0644"
+
+# Unpacking is skipped when package.json exists, so a different installed
+# version (e.g. after raising juiceshop_version) is removed first
+- name: Read installed Juice Shop version
+  ansible.builtin.slurp:
+    src: "{{ juiceshop_dir }}/package.json"
+  register: juiceshop_installed
+  failed_when: false
+
+- name: Remove a different Juice Shop version
+  ansible.builtin.file:
+    path: "{{ juiceshop_dir }}"
+    state: absent
+  when:
+    - juiceshop_installed.content is defined
+    - (juiceshop_installed.content | b64decode | from_json).version != juiceshop_version
+
+- name: Create Juice Shop folder on the Desktop
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ course_user }}"
+    group: "{{ course_user }}"
+    mode: "0755"
+  loop:
+    - "{{ juiceshop_dir | dirname }}"
+    - "{{ juiceshop_dir }}"
+
+- name: Unpack Juice Shop
+  ansible.builtin.unarchive:
+    src: "/var/cache/{{ juiceshop_pkg }}"
+    dest: "{{ juiceshop_dir }}"
+    remote_src: true
+    extra_opts: [--strip-components=1]
+    owner: "{{ course_user }}"
+    group: "{{ course_user }}"
+    creates: "{{ juiceshop_dir }}/package.json"
+
+# unarchive only sets the owner on files, not on every directory; Juice Shop
+# writes into its own tree at startup, so the whole folder must belong to the user
+- name: Give the course user ownership of the Juice Shop folder
+  ansible.builtin.file:
+    path: "{{ juiceshop_dir }}"
+    owner: "{{ course_user }}"
+    group: "{{ course_user }}"
+    recurse: true

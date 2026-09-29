@@ -1,0 +1,37 @@
+---
+- name: Install lab tools
+  ansible.builtin.apt:
+    name:
+      - openssl         # labs 6-7
+      - gnupg           # lab 7
+      - easy-rsa        # lab 7
+      - openvpn         # lab 9
+      - netcat-openbsd  # lab 9
+      - openssh-server  # labs 6-7: exchanging keys and files with Kali
+      - curl
+    state: present
+
+# Ubuntu starts sshd on demand via ssh.socket (enabled by the services role);
+# an enabled ssh.service would compete with it at boot. Not stopped here, so
+# the running SSH session is not affected.
+- name: Do not start ssh.service at boot
+  ansible.builtin.systemd_service:
+    name: ssh.service
+    enabled: false
+
+# Guest Additions installed from the VirtualBox ISO (e.g. by the unattended
+# installer) conflict with the distribution package, so only one is used
+- name: Check for Guest Additions installed from the VirtualBox ISO
+  ansible.builtin.find:
+    paths: /opt
+    patterns: "VBoxGuestAdditions-*"
+    file_type: directory
+  register: vbox_iso_additions
+
+- name: Install VirtualBox guest additions (clipboard, display resize)
+  ansible.builtin.apt:
+    name: virtualbox-guest-x11
+    state: present
+  when:
+    - deb_arch == 'amd64'
+    - vbox_iso_additions.matched == 0

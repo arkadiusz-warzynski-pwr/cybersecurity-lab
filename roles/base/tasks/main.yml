@@ -1,0 +1,44 @@
+---
+- name: Refresh apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    upgrade: dist
+  when: full_upgrade | bool
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ vm_hostname }}"
+  when: vm_hostname is defined
+
+- name: Map hostname to 127.0.1.1
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1\t{{ vm_hostname }}"
+  when: vm_hostname is defined
+
+- name: Set timezone
+  ansible.builtin.file:
+    src: "/usr/share/zoneinfo/{{ timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: true
+
+- name: Write /etc/timezone
+  ansible.builtin.copy:
+    content: "{{ timezone }}\n"
+    dest: /etc/timezone
+    mode: "0644"
+
+# System layout (console, Xfce on Kali). GNOME's per-user layout is set in the user role.
+- name: Set keyboard layout
+  ansible.builtin.lineinfile:
+    path: /etc/default/keyboard
+    regexp: '^XKBLAYOUT='
+    line: 'XKBLAYOUT="{{ keyboard_layout }}"'
+    create: true
+    mode: "0644"

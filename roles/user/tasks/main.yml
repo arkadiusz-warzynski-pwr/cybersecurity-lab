@@ -1,0 +1,51 @@
+---
+- name: Read existing groups
+  ansible.builtin.getent:
+    database: group
+
+- name: Create course user (password only set when the account is new)
+  ansible.builtin.user:
+    name: "{{ course_user }}"
+    password: "{{ course_user_password_hash }}"
+    update_password: on_create
+    shell: "{{ course_shell }}"
+    groups: "{{ course_user_groups | select('in', ansible_facts.getent_group.keys()) | list }}"
+    append: true
+    create_home: true
+
+# GNOME (Ubuntu) keeps its own per-user keyboard layout, which the installer
+# sets and which overrides the system layout from the base role.
+- name: Check for GNOME
+  ansible.builtin.stat:
+    path: /usr/bin/gnome-shell
+  register: gnome_shell
+
+# gsettings needs a D-Bus session: use the user's running session when logged
+# in (the change applies immediately), otherwise a temporary one
+- name: Read the course user's GNOME keyboard layout
+  ansible.builtin.shell: |
+    bus=/run/user/$(id -u)/bus
+    if [ -S "$bus" ]; then
+      DBUS_SESSION_BUS_ADDRESS=unix:path=$bus gsettings get org.gnome.desktop.input-sources sources
+    else
+      dbus-run-session -- gsettings get org.gnome.desktop.input-sources sources
+    fi
+  become_user: "{{ course_user }}"
+  register: gnome_sources
+  changed_when: false
+  when: gnome_shell.stat.exists
+
+- name: Set the course user's GNOME keyboard layout
+  ansible.builtin.shell: |
+    value="[('xkb', '{{ keyboard_layout }}')]"
+    bus=/run/user/$(id -u)/bus
+    if [ -S "$bus" ]; then
+      DBUS_SESSION_BUS_ADDRESS=unix:path=$bus gsettings set org.gnome.desktop.input-sources sources "$value"
+    else
+      dbus-run-session -- gsettings set org.gnome.desktop.input-sources sources "$value"
+    fi
+  become_user: "{{ course_user }}"
+  changed_when: true
+  when:
+    - gnome_shell.stat.exists
+    - gnome_sources.stdout != "[('xkb', '" ~ keyboard_layout ~ "')]"
