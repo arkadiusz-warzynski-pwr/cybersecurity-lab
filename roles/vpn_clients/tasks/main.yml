@@ -1,0 +1,79 @@
+---
+# Lab 9 VPN clients. Both clients are stored in /usr/local/share/cyberlab/vpn;
+# the Desktop gets the one for this VM (A by default). Students clone the VM
+# and run `sudo lab-client B` in the clone. Same keys on every VM; the CA
+# private key is not part of this repo.
+- name: Create shared client store
+  ansible.builtin.file:
+    path: "/usr/local/share/cyberlab/vpn/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: [clientA, clientB]
+
+- name: Store both clients (certificates and config)
+  ansible.builtin.copy:
+    src: "{{ item.0 }}/{{ item.1 }}"
+    dest: "/usr/local/share/cyberlab/vpn/{{ item.0 }}/{{ item.1 }}"
+    mode: "0644"
+  loop: "{{ ['clientA', 'clientB'] | product(['ca.crt', 'client.ovpn']) | list
+            + [['clientA', 'clientA.crt'], ['clientB', 'clientB.crt']] }}"
+
+- name: Store both clients (private keys, root only)
+  ansible.builtin.copy:
+    src: "{{ item.0 }}/{{ item.0 }}{{ item.1 }}"
+    dest: "/usr/local/share/cyberlab/vpn/{{ item.0 }}/{{ item.0 }}{{ item.1 }}"
+    mode: "0600"
+  loop: "{{ ['clientA', 'clientB'] | product(['.key', '-tc2.key']) | list }}"
+
+- name: Install the lab-client command
+  ansible.builtin.template:
+    src: lab-client.j2
+    dest: /usr/local/bin/lab-client
+    mode: "0755"
+
+- name: Check lab_client
+  ansible.builtin.assert:
+    that: lab_client in ['A', 'B']
+    fail_msg: "lab_client must be A or B (got {{ lab_client }})"
+
+- name: Set client names
+  ansible.builtin.set_fact:
+    vpn_client: "client{{ lab_client }}"
+    vpn_other_client: "client{{ 'B' if lab_client == 'A' else 'A' }}"
+
+# Each level is created explicitly: parents created implicitly would belong to root
+- name: Create VPN folders on the Desktop
+  ansible.builtin.file:
+    path: "{{ course_home }}/{{ item.path }}"
+    state: directory
+    owner: "{{ course_user }}"
+    group: "{{ course_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: Desktop, mode: "0755" }
+    - { path: Desktop/VPN, mode: "0700" }
+    - { path: "Desktop/VPN/{{ vpn_client }}", mode: "0700" }
+
+- name: Install client certificates and config
+  ansible.builtin.copy:
+    src: "{{ vpn_client }}/{{ item }}"
+    dest: "{{ course_home }}/Desktop/VPN/{{ vpn_client }}/{{ item }}"
+    owner: "{{ course_user }}"
+    group: "{{ course_user }}"
+    mode: "0644"
+  loop: [ca.crt, "{{ vpn_client }}.crt", client.ovpn]
+
+- name: Install client private keys
+  ansible.builtin.copy:
+    src: "{{ vpn_client }}/{{ item }}"
+    dest: "{{ course_home }}/Desktop/VPN/{{ vpn_client }}/{{ item }}"
+    owner: "{{ course_user }}"
+    group: "{{ course_user }}"
+    mode: "0600"
+  loop: ["{{ vpn_client }}.key", "{{ vpn_client }}-tc2.key"]
+
+# The Desktop only ever holds this VM's own client
+- name: Remove the other VM's client folder
+  ansible.builtin.file:
+    path: "{{ course_home }}/Desktop/VPN/{{ vpn_other_client }}"
+    state: absent

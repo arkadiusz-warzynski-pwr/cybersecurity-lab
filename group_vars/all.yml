@@ -1,0 +1,30 @@
+---
+# --- Account -----------------------------------------------------------
+# The OVA ships with stud/stud. Students running the playbook on their own
+# Kali pass -e course_user=$USER, and their existing password is left alone.
+course_user: stud
+course_user_password_hash: "$6$cyberlab2026$vbisW2XXfP.f7RI2.A34p32kxRVfgv9d/tS55RcSMty2uUBfk8DfdB.ARW23lvfnv2D.P6Hr3QOYV5BjuO9oX/"
+# Same groups as the default Kali user
+course_user_groups: [adm, dialout, cdrom, floppy, sudo, audio, dip, video, plugdev, users, lpadmin,
+                     netdev, scanner, bluetooth, wireshark, kaboxer, vboxsf]
+course_home: "/home/{{ course_user }}"
+
+# --- Packages ----------------------------------------------------------
+# Full upgrade keeps the OVA current; students can skip it with -e full_upgrade=false
+full_upgrade: true
+
+# --- Locale ------------------------------------------------------------
+timezone: Europe/Warsaw
+keyboard_layout: pl
+
+# --- CPU architecture (amd64 / arm64) ---------------------------------
+# Debian names the architecture amd64/arm64; release archives use x64/arm64.
+deb_arch: "{{ 'arm64' if ansible_architecture in ['aarch64', 'arm64'] else 'amd64' }}"
+
+# --- Juice Shop (labs 13-14) --------------------------------------------
+# Prebuilt release: https://github.com/juice-shop/juice-shop/releases
+juiceshop_version: "20.2.0"
+juiceshop_dir: "{{ course_home }}/Desktop/juice-shop"
+
+# --- Lab 9 OpenVPN server ---------------------------------------------
+openvpn_server_dir: /etc/openvpn/server

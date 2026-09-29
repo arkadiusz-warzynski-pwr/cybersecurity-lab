@@ -1,0 +1,16 @@
+# VM images and build output
+*.ova
+*.ovf
+*.vdi
+*.vmdk
+*.qcow2
+*.7z
+build/out/
+
+# The Lab 9 CA private key must never be committed (keep it outside the repo)
+ca-instructor-only/
+**/ca.key
+
+# Ansible
+*.retry
+.vault_pass*

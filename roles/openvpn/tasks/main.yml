@@ -1,0 +1,52 @@
+---
+# Lab 9 VPN server. Keys are the same for every VM; the CA private key is not
+# part of this repo. The service is not enabled: students start it in the lab
+# with `sudo systemctl start openvpn-server@server`.
+- name: Create server config directory
+  ansible.builtin.file:
+    path: "{{ openvpn_server_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Install certificates and server config
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ openvpn_server_dir }}/{{ item }}"
+    mode: "0644"
+  loop: [ca.crt, kali-vpn-server.crt, server.conf]
+
+- name: Install private keys
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ openvpn_server_dir }}/{{ item }}"
+    mode: "0600"
+  loop: [kali-vpn-server.key, tc2-server.key]
+
+# Lab 9 sends traffic between clients A and B through the server. Without
+# client-to-client the kernel routes it, so forwarding must be on (and the
+# traffic is then visible on the server's tun0). The kernel would also send
+# ICMP redirects for traffic leaving tun0 the way it came, which clients see
+# as ping errors, so redirects are switched off (tun0 inherits "default").
+- name: Create drop-in folder for the VPN server unit
+  ansible.builtin.file:
+    path: /etc/systemd/system/openvpn-server@server.service.d
+    state: directory
+    mode: "0755"
+
+- name: Enable IP forwarding when the VPN server starts
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/openvpn-server@server.service.d/forwarding.conf
+    mode: "0644"
+    content: |
+      [Service]
+      ExecStartPre=/usr/sbin/sysctl -w net.ipv4.ip_forward=1 net.ipv4.conf.all.send_redirects=0 net.ipv4.conf.default.send_redirects=0
+
+- name: Reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Create status log directory
+  ansible.builtin.file:
+    path: /var/log/openvpn
+    state: directory
+    mode: "0755"

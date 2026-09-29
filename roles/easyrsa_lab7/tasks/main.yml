@@ -1,0 +1,31 @@
+---
+# Lab 7 starting point: an EasyRSA folder without a CA. Students create
+# vars from vars.example and build their own CA (independent of lab 9).
+# Only created once, so re-running the playbook never touches a student's CA.
+- name: Check for the EasyRSA folder
+  ansible.builtin.stat:
+    path: "{{ course_home }}/openvpn-ca"
+  register: easyrsa_dir
+
+- name: Create EasyRSA folder
+  when: not easyrsa_dir.stat.exists
+  block:
+    - name: Run make-cadir
+      ansible.builtin.command: make-cadir {{ course_home }}/openvpn-ca
+      become_user: "{{ course_user }}"
+      changed_when: true
+
+    - name: Add vars.example
+      ansible.builtin.copy:
+        src: /usr/share/easy-rsa/vars.example
+        dest: "{{ course_home }}/openvpn-ca/vars.example"
+        remote_src: true
+        owner: "{{ course_user }}"
+        group: "{{ course_user }}"
+        mode: "0644"
+
+    # The lab has students create vars themselves (cp vars.example vars)
+    - name: Remove the pre-made vars file
+      ansible.builtin.file:
+        path: "{{ course_home }}/openvpn-ca/vars"
+        state: absent

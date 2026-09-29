@@ -1,0 +1,59 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            ee:cd:6a:73:6a:04:88:6c:1a:12:87:49:69:3f:02:1c
+        Signature Algorithm: ecdsa-with-SHA384
+        Issuer: CN=Cyberbezpieczenstwo Lab9 CA
+        Validity
+            Not Before: Sep 28 20:22:50 2026 GMT
+            Not After : Sep 27 20:22:50 2031 GMT
+        Subject: CN=kali-vpn-server
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (384 bit)
+                pub:
+                    04:72:1b:a4:32:4f:b0:f7:59:6e:4d:f6:64:73:87:
+                    8a:63:b5:71:40:53:09:db:b5:aa:5e:c9:ef:9a:f2:
+                    8f:ec:81:a4:26:13:a8:b8:63:f7:76:be:dd:ec:2b:
+                    8f:d6:87:9a:d4:8c:89:ca:18:dd:8d:9a:8c:7a:c9:
+                    22:11:ac:47:50:f2:37:49:a0:43:4b:00:d9:2f:1e:
+                    14:5c:1e:3a:3d:8c:a0:77:5d:2c:2b:4d:dd:59:a1:
+                    af:ff:2f:cc:e7:4b:f6
+                ASN1 OID: secp384r1
+                NIST CURVE: P-384
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                D6:94:DE:45:A6:22:7A:D0:EB:4E:F8:C2:11:F2:03:45:10:1B:B5:4A
+            X509v3 Authority Key Identifier: 
+                keyid:4F:3F:5D:5E:61:A3:70:DE:F3:3A:38:DB:B1:8A:A8:8F:06:E5:AA:97
+                DirName:/CN=Cyberbezpieczenstwo Lab9 CA
+                serial:29:F7:EC:A8:43:4C:2B:08:0D:51:5F:A9:02:1C:A3:AE:87:85:A2:74
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Key Usage: 
+                Digital Signature, Key Encipherment
+    Signature Algorithm: ecdsa-with-SHA384
+    Signature Value:
+        30:65:02:31:00:b9:56:4a:3e:7a:f6:ce:e0:d7:b2:67:d0:60:
+        51:30:1f:31:02:68:32:7d:13:01:2d:49:9a:8d:96:a7:1c:54:
+        dc:fd:c9:fe:87:b6:3f:24:e8:82:13:58:bd:21:a2:d3:fd:02:
+        30:48:92:e6:ed:a3:47:b2:d5:58:df:e7:6c:4e:af:9d:68:fa:
+        b0:67:3a:38:d2:a9:cb:56:c3:4b:98:e6:ff:8a:fa:cb:7a:10:
+        48:b3:e3:3c:12:c6:25:94:10:fe:d8:c9:dd
+-----BEGIN CERTIFICATE-----
+MIICLzCCAbWgAwIBAgIRAO7NanNqBIhsGhKHSWk/AhwwCgYIKoZIzj0EAwMwJjEk
+MCIGA1UEAwwbQ3liZXJiZXpwaWVjemVuc3R3byBMYWI5IENBMB4XDTI2MDkyODIw
+MjI1MFoXDTMxMDkyNzIwMjI1MFowGjEYMBYGA1UEAwwPa2FsaS12cG4tc2VydmVy
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEchukMk+w91luTfZkc4eKY7VxQFMJ27Wq
+XsnvmvKP7IGkJhOouGP3dr7d7CuP1oea1IyJyhjdjZqMeskiEaxHUPI3SaBDSwDZ
+Lx4UXB46PYygd10sK03dWaGv/y/M50v2o4GyMIGvMAkGA1UdEwQCMAAwHQYDVR0O
+BBYEFNaU3kWmInrQ6074whHyA0UQG7VKMGEGA1UdIwRaMFiAFE8/XV5ho3De8zo4
+27GKqI8G5aqXoSqkKDAmMSQwIgYDVQQDDBtDeWJlcmJlenBpZWN6ZW5zdHdvIExh
+YjkgQ0GCFCn37KhDTCsIDVFfqQIco66HhaJ0MBMGA1UdJQQMMAoGCCsGAQUFBwMB
+MAsGA1UdDwQEAwIFoDAKBggqhkjOPQQDAwNoADBlAjEAuVZKPnr2zuDXsmfQYFEw
+HzECaDJ9EwEtSZqNlqccVNz9yf6Htj8k6IITWL0hotP9AjBIkubto0ey1Vjf52xO
+r51o+rBnOjjSqctWw0uY5v+K+st6EEiz4zwSxiWUEP7Yyd0=
+-----END CERTIFICATE-----

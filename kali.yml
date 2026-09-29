@@ -1,0 +1,17 @@
+---
+# Course Kali VM for Cyberbezpieczeństwo labs 6-14.
+# Students (own Kali):  sudo ansible-pull -U <repo-url> kali.yml -e course_user=$USER
+# Instructor (OVA):     run on a fresh Kali VM, then build/seal.yml, then build/export.ps1
+- name: Configure course Kali VM
+  hosts: all
+  become: true
+  vars:
+    course_shell: /usr/bin/zsh
+    enabled_services: [apache2, ssh]
+  roles:
+    - base
+    - user
+    - tools
+    - juiceshop
+    - openvpn
+    - services

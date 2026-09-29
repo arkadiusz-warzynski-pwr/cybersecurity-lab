@@ -1,0 +1,32 @@
+---
+# Course Ubuntu VM (labs 6-9: OpenSSL/DH partner, lab 7 CA, lab 8 victim, lab 9 VPN clients).
+# One VM is built (Ubuntu A). For lab 9 students clone it and run `sudo lab-client B`
+# in the clone; the playbook respects that choice when run again (/etc/cyberlab-client).
+# Students (own Ubuntu):  sudo ansible-pull -U <repo-url> ubuntu.yml -e course_user=$USER
+# Instructor (OVA):       run on a fresh Ubuntu VM, then build/seal.yml, then build/export.ps1
+- name: Configure course Ubuntu VM
+  hosts: all
+  become: true
+  vars:
+    lab_client: A
+    course_shell: /bin/bash
+    vm_hostname: "ubuntu-{{ lab_client | lower }}"
+    enabled_services: [ssh.socket]   # Ubuntu starts sshd on demand
+  pre_tasks:
+    - name: Read a previous lab-client choice
+      ansible.builtin.slurp:
+        src: /etc/cyberlab-client
+      register: lab_client_file
+      failed_when: false
+
+    - name: Keep the previous lab-client choice
+      ansible.builtin.set_fact:
+        lab_client: "{{ lab_client_file.content | b64decode | trim }}"
+      when: lab_client_file.content is defined
+  roles:
+    - base
+    - user
+    - ubuntu_tools
+    - vpn_clients
+    - easyrsa_lab7
+    - services

@@ -1,0 +1,145 @@
+---
+# Final cleanup before exporting the OVA (Kali and Ubuntu). Run inside the
+# build VM, from the repo folder, as the temporary build user:
+#   ansible-playbook build/seal.yml                       (Kali, build user kali)
+#   ansible-playbook build/seal.yml -e build_user=stud -e remove_build_user=false
+#                                                         (Ubuntu, installed as stud)
+# About 20 seconds after the playbook ends, the build access (Kali: the whole
+# build user; Ubuntu: stud's SSH keys) and the temporary sudo rule are removed
+# and the VM powers off. Then run build/export.ps1.
+- name: Seal the course VM for export
+  hosts: all
+  become: true
+  vars:
+    build_user: kali
+    build_sudoers: /etc/sudoers.d/99-build
+    # false when the build user is the course user itself (Ubuntu: stud):
+    # only its SSH keys and the temporary sudo rule are removed
+    remove_build_user: true
+    course_user: stud
+    zero_free_space: true
+  tasks:
+    - name: Remove packages that are no longer needed
+      ansible.builtin.apt:
+        autoremove: true
+        purge: true
+
+    - name: Clean apt cache
+      ansible.builtin.apt:
+        clean: true
+
+    - name: Find downloaded Juice Shop archives
+      ansible.builtin.find:
+        paths: /var/cache
+        patterns: "juice-shop-*.tgz"
+      register: juiceshop_archives
+
+    - name: Remove downloaded Juice Shop archives
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ juiceshop_archives.files }}"
+
+    # Every copy of the OVA gets its own SSH host keys on first boot
+    - name: Install first-boot SSH host key generation
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/regenerate-ssh-host-keys.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Generate SSH host keys if missing
+          # Runs early: Ubuntu starts sshd on demand via ssh.socket (sockets.target)
+          DefaultDependencies=no
+          After=local-fs.target
+          Before=ssh.service ssh.socket sockets.target
+          ConditionPathExists=!/etc/ssh/ssh_host_ed25519_key
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/bin/ssh-keygen -A
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable first-boot SSH host key generation
+      ansible.builtin.systemd_service:
+        name: regenerate-ssh-host-keys.service
+        enabled: true
+        daemon_reload: true
+
+    - name: Find SSH host keys
+      ansible.builtin.find:
+        paths: /etc/ssh
+        patterns: "ssh_host_*"
+      register: ssh_host_keys
+
+    - name: Remove SSH host keys
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ ssh_host_keys.files }}"
+
+    # An empty machine-id is regenerated on first boot (unique DHCP client IDs for cloned VMs)
+    - name: Reset machine-id
+      ansible.builtin.copy:
+        content: ""
+        dest: /etc/machine-id
+        mode: "0444"
+
+    - name: Remove D-Bus machine-id copy
+      ansible.builtin.file:
+        path: /var/lib/dbus/machine-id
+        state: absent
+
+    - name: Remove shell histories and build logs
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /root/.bash_history
+        - /root/.zsh_history
+        - "/home/{{ course_user }}/.bash_history"
+        - "/home/{{ course_user }}/.zsh_history"
+        - "/home/{{ build_user }}/provision.log"
+        - "/home/{{ build_user }}/provision2.log"
+
+    - name: Empty the systemd journal
+      ansible.builtin.shell: journalctl --rotate && journalctl --vacuum-time=1s
+      changed_when: true
+
+    # sync must run before rm: zeros still in the page cache when the file is
+    # deleted are never written, leaving old data in "free" space (~2.5 GB with 8 GB RAM)
+    - name: Zero free disk space so the OVA compresses well
+      ansible.builtin.shell: |
+        dd if=/dev/zero of=/var/tmp/zero bs=4M status=none || true
+        sync
+        rm -f /var/tmp/zero
+        sync
+      when: zero_free_space | bool
+      changed_when: true
+
+    # Everything the running playbook itself depends on (the build user, its
+    # ~/.ansible working files, the repo copy, /tmp) can only be removed after
+    # the playbook has finished: a transient systemd timer runs this script.
+    - name: Write the final cleanup script
+      ansible.builtin.copy:
+        dest: /usr/local/sbin/seal-finalize
+        mode: "0700"
+        content: |
+          #!/bin/sh
+          {% if remove_build_user | bool %}
+          loginctl terminate-user {{ build_user }}; sleep 3
+          pkill -KILL -u {{ build_user }}
+          userdel -r {{ build_user }}
+          {% else %}
+          rm -f /home/{{ build_user }}/.ssh/authorized_keys
+          rm -rf /home/{{ build_user }}/.ansible /home/{{ build_user }}/Cybersecurity-lab
+          {% endif %}
+          rm -rf /root/.ansible
+          find /tmp -mindepth 1 -maxdepth 1 ! -name 'systemd-private-*' ! -name '.*-unix' -exec rm -rf {} +
+          rm -f {{ build_sudoers }} /usr/local/sbin/seal-finalize
+          systemctl poweroff
+
+    - name: Schedule the final cleanup and power-off
+      ansible.builtin.command: systemd-run --unit=seal-finalize --on-active=20 /usr/local/sbin/seal-finalize
+      changed_when: true

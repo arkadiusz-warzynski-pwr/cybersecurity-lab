@@ -1,0 +1,43 @@
+---
+# Tools referenced in labs 6-14. Most ship with kali-linux-default; listing
+# them keeps the playbook correct on minimal Kali installs (option C).
+- name: Install lab tools
+  ansible.builtin.apt:
+    name:
+      # labs 6-7, 9: crypto, PKI, VPN
+      - openssl
+      - gnupg
+      - easy-rsa
+      - openvpn
+      - openssl-provider-legacy   # DES in lab 9 task 4.3
+      # lab 8: MitM
+      - ettercap-graphical
+      - dsniff
+      - wireshark
+      - apache2
+      # labs 9-12: traffic, recon, exploitation
+      - netcat-traditional
+      - nmap
+      - zenmap
+      - amap
+      - p0f
+      - hping3
+      - nbtscan
+      - irpas          # tctrace (lab 10)
+      - traceroute
+      - whois
+      - bind9-dnsutils
+      - dnsenum
+      - fierce
+      - dmitry
+      - theharvester
+      - metasploit-framework
+      # labs 13-14: web
+      - zaproxy
+      - burpsuite
+      - firefox-esr
+      - nodejs
+      - npm
+      # remote access for lab exercises
+      - openssh-server
+    state: present
