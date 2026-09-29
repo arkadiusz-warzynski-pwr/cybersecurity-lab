@@ -38,7 +38,7 @@ Shared settings are in `group_vars/all.yml`, per-VM settings at the top of each 
 3. Test, then run `ansible-playbook build/seal.yml`. It cleans the VM, zero-fills free space, removes the build access and powers off.
    - Kali: the build user `kali` is deleted.
    - Ubuntu: `ansible-playbook build/seal.yml -e build_user=stud -e remove_build_user=false` keeps `stud` and removes only its SSH keys and the temporary sudo rule.
-4. On the host, export each VM. The script sets 4 GB RAM, 2 CPUs and the Lab NAT Network, leaves out MAC addresses, exports to `build/out/` and writes a SHA256 checksum:
+4. On the host, export each VM. The script sets 4 GB RAM, 2 CPUs and the Lab NAT Network, leaves out MAC addresses, exports to `build/out/` (or `-OutDir <folder>` to keep the OVAs outside the repository) and writes a SHA256 checksum:
    ```
    .\build\export.ps1 -VmName <kali build VM>   -Name "Kali Lab 2026-2027"   -Version 2026.2
    .\build\export.ps1 -VmName <ubuntu build VM> -Name "Ubuntu Lab 2026-2027" -Version 26.04.1
