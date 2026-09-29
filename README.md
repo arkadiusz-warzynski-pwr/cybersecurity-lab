@@ -20,7 +20,7 @@ VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 -
 **C. Your own Kali / Ubuntu.** Run inside the VM:
 ```bash
 sudo apt update && sudo apt install -y ansible-core git
-sudo ansible-pull -U <repo-url> kali.yml -e course_user=$USER     # or ubuntu.yml
+sudo ansible-pull -U https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab.git kali.yml -e course_user=$USER     # or ubuntu.yml
 ```
 For a second Ubuntu, run `sudo lab-client B` in it after the playbook (or add `-e lab_client=B`). Add `-e full_upgrade=false` to skip the full system upgrade.
 

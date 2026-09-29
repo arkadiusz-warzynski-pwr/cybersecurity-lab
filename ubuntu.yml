@@ -2,7 +2,7 @@
 # Course Ubuntu VM (labs 6-9: OpenSSL/DH partner, lab 7 CA, lab 8 victim, lab 9 VPN clients).
 # One VM is built (Ubuntu A). For lab 9 students clone it and run `sudo lab-client B`
 # in the clone; the playbook respects that choice when run again (/etc/cyberlab-client).
-# Students (own Ubuntu):  sudo ansible-pull -U <repo-url> ubuntu.yml -e course_user=$USER
+# Students (own Ubuntu):  sudo ansible-pull -U https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab.git ubuntu.yml -e course_user=$USER
 # Instructor (OVA):       run on a fresh Ubuntu VM, then build/seal.yml, then build/export.ps1
 - name: Configure course Ubuntu VM
   hosts: all
