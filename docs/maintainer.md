@@ -66,6 +66,6 @@ Certificates are valid until 2031 (CA until 2036).
 - [x] Lab 9 end to end with Kali + Ubuntu A + Ubuntu B (all four cipher settings, A↔B netcat and file transfer)
 - [x] Ubuntu 26.04 (amd64): single OVA with `lab-client`, build, clone test (`lab-client B`: new hostname, machine ID, host keys, IP; stays B on playbook re-run), seal, export
 - [x] Import test of the final OVAs: both boot to the login screen and get addresses on the Lab NAT Network
-- [ ] Publish the OVAs (GitHub release) and add the download steps to the README
+- [x] OVAs published as GitHub release [`2026-2027`](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/tag/2026-2027) (split into parts under 2 GiB, `SHA256SUMS`; joining checked with `cat` and `copy /b`)
 - [ ] Lab instruction updates (see [lab-fixes.md](lab-fixes.md))
 - [ ] Test on arm64 (Mac)
