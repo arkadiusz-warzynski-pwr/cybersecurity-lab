@@ -12,6 +12,7 @@ How the course VMs are built, what is where, and what is still open. Student ins
 | `build/seal.yml` | cleanup inside a build VM before export |
 | `build/export.ps1` | OVA export on the Windows host |
 | `build/out/` | exported OVAs (not in git) |
+| `scripts/get-vms.ps1`, `scripts/get-vms.sh` | student download scripts (Windows / macOS + Linux): download, check, join, NAT Network, import |
 
 ## Roles
 | Role | VM | Purpose |
@@ -43,6 +44,14 @@ Shared settings are in `group_vars/all.yml`, per-VM settings at the top of each 
    .\build\export.ps1 -VmName <kali build VM>   -Name "Kali Lab 2026-2027"   -Version 2026.2
    .\build\export.ps1 -VmName <ubuntu build VM> -Name "Ubuntu Lab 2026-2027" -Version 26.04.1
    ```
+
+### Publishing a release
+The student scripts (`scripts/get-vms.*`) download from the latest release and rely on its file names:
+- `SHA256SUMS` lists every file: the OVAs and their parts.
+- OVAs are named `<name>-<arch>.ova` (`amd64` / `arm64`, as `export.ps1` names them); the scripts take only those for the student's CPU. An OVA over 2 GB is split into `<ova>.part1`, `.part2`, …: `split -b 1900M --numeric-suffixes=1 -a 1 <ova> <ova>.part`.
+- A VM whose name starts with `Ubuntu` is imported twice, as `… A` and `… B`.
+
+arm64 OVAs can be added to the same release later; the scripts pick them up on Apple Silicon.
 
 ### Apple Silicon (arm64)
 The playbooks choose the architecture themselves; all Kali and Ubuntu packages and the Juice Shop build exist for arm64 (checked 2026-09-29). Only the Ubuntu guest additions package is amd64-only, so on arm64 it is skipped.

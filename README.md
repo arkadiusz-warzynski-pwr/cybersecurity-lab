@@ -11,11 +11,38 @@ Login on Kali and Ubuntu: **`stud` / `stud`**.
 
 ## What you need
 - VirtualBox 7.2 (or newer) on an amd64 (Intel/AMD) computer
-- About 50 GB of free disk space: the VMs take about 35 GB, the downloaded `.ova` files (about 10.5 GB) can be deleted after import
+- About 50 GB of free disk space: the three VMs take about 33 GB after import and grow as you use them; the downloaded `.ova` files (about 11 GB) can be deleted after import
 - Each VM is set to 4 GB RAM. Lab 9 runs three VMs at once; if your computer has less memory, lower the RAM of the Ubuntu VMs in their settings.
 
 ## Option 1: ready-made VMs (recommended)
-1. **Create the lab network** (once). All lab VMs use the VirtualBox NAT Network **Lab NAT Network** (`172.16.96.0/24`); without it VirtualBox refuses to start them:
+Install VirtualBox first. Then run one command; do not download the `.ova` files in the browser. The command:
+- downloads the VMs from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) (about 11 GB) into `Downloads/cyberlab-vms`
+- checks them against `SHA256SUMS` and downloads damaged parts again
+- creates the VirtualBox NAT Network **Lab NAT Network** (`172.16.96.0/24`), which all lab VMs use
+- imports **Kali Lab 2026-2027**, **Ubuntu Lab 2026-2027 A** and **Ubuntu Lab 2026-2027 B** (the second Ubuntu is needed in lab 9)
+
+If it is interrupted (network, sleep, closed window), run the same command again: it continues where it stopped.
+
+**Windows:** open *PowerShell* (Start menu, type `powershell`; not as administrator) and paste:
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.ps1 | iex
+```
+
+**macOS / Linux:** open *Terminal* and paste:
+```bash
+curl -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | bash
+```
+
+**Before lab 9:** start *Ubuntu Lab 2026-2027 B* once, log in and run:
+```bash
+sudo lab-client B
+```
+It becomes `ubuntu-b` with the client B VPN files and restarts. *Ubuntu Lab 2026-2027 A* stays `ubuntu-a`.
+
+<details>
+<summary>Without the script (manual download)</summary>
+
+1. **Create the lab network** (once); without it VirtualBox refuses to start the VMs:
    ```
    VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on
    ```
@@ -33,11 +60,9 @@ Login on Kali and Ubuntu: **`stud` / `stud`**.
      ```
    **Check** the files against `SHA256SUMS`: on Linux `sha256sum -c SHA256SUMS`, on macOS `shasum -a 256 -c SHA256SUMS`, on Windows (PowerShell) `Get-FileHash Kali-Lab-2026-2027-amd64.ova` and compare with the value in `SHA256SUMS`. Every line must be `OK` or the hash must match; otherwise download the damaged part again. Afterwards the `.part` files can be deleted.
 3. **Import** each file: *File → Import Appliance*.
-4. **Second Ubuntu for lab 9:** clone the Ubuntu VM (*Clone → Generate new MAC addresses for all network adapters*) or import the Ubuntu OVA a second time. Start the copy, log in and run:
-   ```bash
-   sudo lab-client B
-   ```
-   The copy becomes `ubuntu-b` with the client B VPN files and restarts. The original stays `ubuntu-a`.
+4. **Second Ubuntu for lab 9:** clone the Ubuntu VM (*Clone → Generate new MAC addresses for all network adapters*) or import the Ubuntu OVA a second time, then run `sudo lab-client B` in the copy as above.
+
+</details>
 
 ## Option 2: your own Kali / Ubuntu
 If you already have Kali or Ubuntu, you can set it up with the same configuration. Run inside the VM:
