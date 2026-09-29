@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # macOS / Linux: downloads the lab VMs from the latest release, checks them
-# against SHA256SUMS, creates the Lab NAT Network and imports the VMs into
-# VirtualBox. Run in a terminal:
-#   curl -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | bash
+# against SHA256SUMS, creates the Lab NAT Network and imports Kali and
+# Ubuntu A into VirtualBox. Run in a terminal:
+#   curl --tlsv1.2 -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | bash
+# The second Ubuntu for lab 9 (client B) is imported only on request:
+#   curl --tlsv1.2 -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | CYBERLAB_WITH_B=1 bash
+# VMs already in VirtualBox are not downloaded again.
 # Safe to run again: finished steps are skipped, interrupted downloads resume.
 # Optional environment variables (put them before "bash"):
-#   CYBERLAB_DIR   download folder (default: ~/Downloads/cyberlab-vms)
-#   CYBERLAB_TAG   release to use instead of the latest one
-#   CYBERLAB_NO_B  set to 1 to import only one Ubuntu
+#   CYBERLAB_WITH_B  set to 1 to import the second Ubuntu (client B) too
+#   CYBERLAB_DIR     download folder (default: ~/Downloads/cyberlab-vms)
+#   CYBERLAB_TAG     release to use instead of the latest one
 # Works with the bash 3.2 that comes with macOS.
 set -euo pipefail
 
@@ -20,6 +23,8 @@ NET_NAME='Lab NAT Network'
 NET_PREFIX=172.16.96.0/24
 PART_KB=$((1900 * 1024))   # parts are at most this big
 DIR=${CYBERLAB_DIR:-$HOME/Downloads/cyberlab-vms}
+WITH_B=${CYBERLAB_WITH_B:-0}
+SCRIPT_URL=https://raw.githubusercontent.com/$REPO/master/scripts/get-vms.sh
 
 say() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 die() { printf '\033[31mError: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -55,7 +60,7 @@ cd "$DIR"
 
 # --- release ----------------------------------------------------------------
 if [ -n "${CYBERLAB_TAG:-}" ]; then TAG=$CYBERLAB_TAG; else
-    latest=$(curl -sSI -o /dev/null -w '%{redirect_url}' "https://github.com/$REPO/releases/latest" || true)
+    latest=$(curl --tlsv1.2 -sSI -o /dev/null -w '%{redirect_url}' "https://github.com/$REPO/releases/latest" || true)
     case $latest in
         */tag/*) TAG=${latest##*/tag/} ;;
         *) die "Could not find the latest release. Check your internet connection." ;;
@@ -63,7 +68,7 @@ if [ -n "${CYBERLAB_TAG:-}" ]; then TAG=$CYBERLAB_TAG; else
 fi
 BASE=https://github.com/$REPO/releases/download/$TAG
 say "Release $TAG, download folder $DIR"
-curl -fsSL --retry 5 -o SHA256SUMS "$BASE/SHA256SUMS" || die "Could not download SHA256SUMS ($BASE/SHA256SUMS)"
+curl --tlsv1.2 -fsSL --retry 5 -o SHA256SUMS "$BASE/SHA256SUMS" || die "Could not download SHA256SUMS ($BASE/SHA256SUMS)"
 
 expected() { awk -v n="$1" '{ f = $2; sub(/^\*/, "", f) } f == n { print $1; exit }' SHA256SUMS; }
 names() { awk '{ f = $2; sub(/^\*/, "", f); print f }' SHA256SUMS; }
@@ -73,13 +78,48 @@ parts_of() {   # parts of an OVA in numeric order
 }
 is_ok() { [ -f "$1" ] && [ "$(sha256 "$1")" = "$(expected "$1")" ]; }
 size_kb() { if [ -f "$1" ]; then echo $(( $(wc -c < "$1") / 1024 )); else echo 0; fi; }
+in_vbox() { "$VBM" list vms < /dev/null | grep -Fq "\"$1\" "; }
 
 OVAS=$(names | grep -- "-$ARCH\.ova\$" | sort || true)
 [ -n "$OVAS" ] || die "Release $TAG has no VMs for $ARCH computers. Use option 2 in the README (your own Kali / Ubuntu)."
 
+# --- which VMs are missing --------------------------------------------------
+# The VM name is in the OVF descriptor, the first file in the OVA, so the first
+# megabyte is enough; it is read from the local OVA or downloaded.
+vm_name_of() {
+    if [ -f "$1" ]; then
+        head -c 1048576 "$1"
+    else
+        first=$(parts_of "$1" | sed -n 1p)
+        [ -n "$first" ] || first=$1
+        curl --tlsv1.2 -fsSL --retry 5 -r 0-1048575 "$BASE/$first" || die "Could not download $first"
+    fi | LC_ALL=C tr -d '\000' | LC_ALL=C sed -n 's/.*<VirtualSystem ovf:id="\([^"]*\)".*/\1/p'
+}
+
+PLAN=''       # lines "<ova>|<VM name>" still to import
+UBUNTU=''
+for ova in $OVAS; do
+    vm_name=$(vm_name_of "$ova")
+    [ -n "$vm_name" ] || die "Could not read the VM name from $ova"
+    vms=$vm_name
+    # lab 9 needs a second Ubuntu (client B); it is imported only on request
+    case $vm_name in
+        Ubuntu*) UBUNTU=$vm_name; vms="$vm_name A"
+                 if [ "$WITH_B" = 1 ]; then vms="$vms
+$vm_name B"; fi ;;
+    esac
+    while IFS= read -r vm; do
+        if in_vbox "$vm"; then say "'$vm' is already in VirtualBox"; else PLAN="$PLAN$ova|$vm
+"; fi
+    done <<EOF
+$vms
+EOF
+done
+TO_GET=$(printf '%s' "$PLAN" | cut -d'|' -f1 | uniq)
+
 # --- free space -------------------------------------------------------------
 need=0; largest=0
-for ova in $OVAS; do
+for ova in $TO_GET; do
     [ -f "$ova" ] && continue
     n=$(parts_of "$ova" | wc -l); [ "$n" -gt 0 ] || n=1
     n=$((n * PART_KB)); need=$((need + n)); [ "$n" -gt "$largest" ] && largest=$n
@@ -98,14 +138,14 @@ get_checked() {
         say "Downloading $1"
         # a partial file from an interrupted run is resumed on the first try
         [ "$try" -gt 1 ] && rm -f "$1"
-        curl -fL --retry 5 -C - --progress-bar -o "$1" "$BASE/$1" || true
+        curl --tlsv1.2 -fL --retry 5 -C - --progress-bar -o "$1" "$BASE/$1" || true
         say "Checking $1"
         if is_ok "$1"; then return; fi
     done
     die "$1 is damaged after two downloads. Run the script again later."
 }
 
-for ova in $OVAS; do
+for ova in $TO_GET; do
     if [ -f "$ova" ] && [ ! -f "$ova.tmp" ]; then
         say "Checking $ova"
         if is_ok "$ova"; then continue; fi
@@ -133,35 +173,24 @@ if ! "$VBM" natnetwork list | tr -d '\r' | grep -q "^Name: *$NET_NAME\$"; then
 fi
 
 imported_b=0
-for ova in $OVAS; do
-    # VM name from the OVF descriptor, the first file in the OVA. (The name
-    # "import -n" suggests gets " 1" appended when the VM already exists.)
-    vm_name=$(head -c 1048576 "$ova" | LC_ALL=C tr -d '\000' | LC_ALL=C sed -n 's/.*<VirtualSystem ovf:id="\([^"]*\)".*/\1/p')
-    if [ -z "$vm_name" ]; then
-        vm_name=$("$VBM" import "$ova" -n | sed -n 's/.*Suggested VM name "\(.*\)".*/\1/p' | head -n 1)
-    fi
-    vms=$vm_name
-    # lab 9 needs two Ubuntu VMs: client A and client B
-    case $vm_name in
-        Ubuntu*) vms="$vm_name A"; [ "${CYBERLAB_NO_B:-}" = 1 ] || vms="$vms
-$vm_name B" ;;
-    esac
-    while IFS= read -r vm; do
-        if "$VBM" list vms | grep -Fq "\"$vm\" "; then say "'$vm' is already in VirtualBox"; continue; fi
-        say "Importing '$vm' (this takes a few minutes)"
-        "$VBM" import "$ova" --vsys 0 --vmname "$vm" < /dev/null || die "Import of '$vm' failed. If VirtualBox now lists '$vm', remove it there (Remove > Delete all files) and run the script again."
-        case $vm in *' B') imported_b=1 ;; esac
-    done <<EOF
-$vms
+while IFS='|' read -r ova vm; do
+    [ -n "$ova" ] || continue
+    say "Importing '$vm' (this takes a few minutes)"
+    "$VBM" import "$ova" --vsys 0 --vmname "$vm" < /dev/null || die "Import of '$vm' failed. If VirtualBox now lists '$vm', remove it there (Remove > Delete all files) and run the script again."
+    if [ "$vm" = "$UBUNTU B" ]; then imported_b=1; fi
+done <<EOF
+$PLAN
 EOF
-done
 
 echo
 say "Done. Log in on every VM as stud / stud."
 if [ "$imported_b" = 1 ]; then
-    echo "    Before lab 9: start the Ubuntu ... B VM once, log in and run:  sudo lab-client B"
+    echo "    Before lab 9: start '$UBUNTU B' once, log in and run:  sudo lab-client B"
+elif [ -n "$UBUNTU" ] && ! in_vbox "$UBUNTU B"; then
+    echo "    Lab 9 needs a second Ubuntu (client B). To add it, run:"
+    echo "    curl --tlsv1.2 -fsSL $SCRIPT_URL | CYBERLAB_WITH_B=1 bash"
 fi
-echo "    The .ova files in $DIR can be deleted now, or kept to reset a VM later."
+[ -z "$PLAN" ] || echo "    The .ova files in $DIR can be deleted now."
 }
 
 main "$@"

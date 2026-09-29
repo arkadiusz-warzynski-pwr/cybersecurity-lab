@@ -12,7 +12,7 @@ How the course VMs are built, what is where, and what is still open. Student ins
 | `build/seal.yml` | cleanup inside a build VM before export |
 | `build/export.ps1` | OVA export on the Windows host |
 | `build/out/` | exported OVAs (not in git) |
-| `scripts/get-vms.ps1`, `scripts/get-vms.sh` | student download scripts (Windows / macOS + Linux): download, check, join, NAT Network, import |
+| `scripts/get-vms.ps1`, `scripts/get-vms.sh` | student download scripts (Windows / macOS + Linux): download, check, join, NAT Network, import Kali + Ubuntu A (Ubuntu B with `CYBERLAB_WITH_B=1`) |
 
 ## Roles
 | Role | VM | Purpose |
@@ -49,7 +49,8 @@ Shared settings are in `group_vars/all.yml`, per-VM settings at the top of each 
 The student scripts (`scripts/get-vms.*`) download from the latest release and rely on its file names:
 - `SHA256SUMS` lists every file: the OVAs and their parts.
 - OVAs are named `<name>-<arch>.ova` (`amd64` / `arm64`, as `export.ps1` names them); the scripts take only those for the student's CPU. An OVA over 2 GB is split into `<ova>.part1`, `.part2`, …: `split -b 1900M --numeric-suffixes=1 -a 1 <ova> <ova>.part`.
-- A VM whose name starts with `Ubuntu` is imported twice, as `… A` and `… B`.
+- A VM whose name starts with `Ubuntu` is imported as `… A`, and with `CYBERLAB_WITH_B=1` also as `… B`.
+- The VM name is read from the OVF descriptor (`<VirtualSystem ovf:id="…">`), which must be the first file in the OVA (VirtualBox exports it that way). The scripts fetch its first megabyte to skip OVAs whose VMs are already in VirtualBox.
 
 arm64 OVAs can be added to the same release later; the scripts pick them up on Apple Silicon.
 

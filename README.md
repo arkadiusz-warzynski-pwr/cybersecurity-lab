@@ -11,7 +11,7 @@ Login on Kali and Ubuntu: **`stud` / `stud`**.
 
 ## What you need
 - VirtualBox 7.2 (or newer) on an amd64 (Intel/AMD) computer
-- About 50 GB of free disk space: the three VMs take about 33 GB after import and grow as you use them; the downloaded `.ova` files (about 11 GB) can be deleted after import
+- About 40 GB of free disk space: Kali and Ubuntu take about 26 GB after import (33 GB with the second Ubuntu for lab 9) and grow as you use them; the downloaded `.ova` files (about 11 GB) can be deleted after import
 - Each VM is set to 4 GB RAM. Lab 9 runs three VMs at once; if your computer has less memory, lower the RAM of the Ubuntu VMs in their settings.
 
 ## Option 1: ready-made VMs (recommended)
@@ -19,21 +19,31 @@ Install VirtualBox first. Then run one command; do not download the `.ova` files
 - downloads the VMs from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) (about 11 GB) into `Downloads/cyberlab-vms`
 - checks them against `SHA256SUMS` and downloads damaged parts again
 - creates the VirtualBox NAT Network **Lab NAT Network** (`172.16.96.0/24`), which all lab VMs use
-- imports **Kali Lab 2026-2027**, **Ubuntu Lab 2026-2027 A** and **Ubuntu Lab 2026-2027 B** (the second Ubuntu is needed in lab 9)
+- imports **Kali Lab 2026-2027** and **Ubuntu Lab 2026-2027 A**
 
-If it is interrupted (network, sleep, closed window), run the same command again: it continues where it stopped.
+If it is interrupted (network, sleep, closed window), run the same command again: it continues where it stopped. VMs that are already in VirtualBox are not downloaded again.
 
 **Windows:** open *PowerShell* (Start menu, type `powershell`; not as administrator) and paste:
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.ps1 | iex
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12, Tls13'; irm https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.ps1 | iex
 ```
 
 **macOS / Linux:** open *Terminal* and paste:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | bash
+curl --tlsv1.2 -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | bash
 ```
 
-**Before lab 9:** start *Ubuntu Lab 2026-2027 B* once, log in and run:
+**Before lab 9:** lab 9 needs a second Ubuntu (client B). Add it with the same command and one option; it downloads only the Ubuntu VM (about 4 GB) if it is no longer in the download folder:
+- Windows (PowerShell):
+  ```powershell
+  $env:CYBERLAB_WITH_B = 1; [Net.ServicePointManager]::SecurityProtocol = 'Tls12, Tls13'; irm https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.ps1 | iex
+  ```
+- macOS / Linux:
+  ```bash
+  curl --tlsv1.2 -fsSL https://raw.githubusercontent.com/arkadiusz-warzynski-pwr/cybersecurity-lab/master/scripts/get-vms.sh | CYBERLAB_WITH_B=1 bash
+  ```
+
+Then start *Ubuntu Lab 2026-2027 B*, log in and run:
 ```bash
 sudo lab-client B
 ```
