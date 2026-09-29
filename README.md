@@ -6,7 +6,6 @@ Virtual machines for the Cyberbezpieczeństwo labs 6–14.
 |---|---|
 | **Kali Lab 2026-2027** (Kali 2026.2) | labs 6–14 |
 | **Ubuntu Lab 2026-2027** (Ubuntu 26.04) | labs 6–9; lab 9 needs two copies (client A and B) |
-| Metasploitable 2 | labs 8, 10–12 (from the course materials) |
 
 Login on Kali and Ubuntu: **`stud` / `stud`**.
 
