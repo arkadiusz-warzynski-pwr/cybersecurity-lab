@@ -1,4 +1,4 @@
-# Cyberbezpieczeństwo – lab VMs 2026-2027
+# Cybersecurity – lab VMs 2026-2027
 
 Virtual machines for the Cyberbezpieczeństwo labs 6–14.
 
