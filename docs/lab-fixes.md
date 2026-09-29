@@ -14,7 +14,9 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 ## Lab 7 (Ubuntu, independent of lab 9)
 - [x] The EasyRSA folder is `~/openvpn-ca`, not `/home/server/EasyRSA-3.0.10`. It starts empty: `vars.example` is present and there is no `pki/`, so students build the CA themselves.
 - [x] Typo: `-signature encrypted_hash.sha25` → `encrypted_hash.sha256`.
-- [ ] `openvpn --genkey --secret ta.key` is deprecated syntax. Use `openvpn --genkey secret ta.key`.
+- [x] `openvpn --genkey --secret ta.key` is deprecated syntax (OpenVPN 2.7 prints two DEPRECATED warnings). Use `openvpn --genkey secret ta.key`.
+- [x] EasyRSA 3.2 uses the organisation fields from `vars` (`EASYRSA_REQ_COUNTRY`, `…_ORG`, …) only with `set_var EASYRSA_DN "org"`; without it the certificates contain only the CN. Add that line to the fields students uncomment. `build-ca`/`gen-req` then offer the `vars` values as defaults (Enter), `sign-req` asks for `yes`. The files end up in `~/openvpn-ca/pki` (`ca.crt`, `dh.pem`, `issued/`, `private/`), `ta.key` in `~/openvpn-ca`.
+- [x] `gpg --export-secret-keys -a <file name> <email>` prints the key to the terminal and ignores the file name. Use `gpg --export-secret-keys --armour --output <file name> <email>`.
 
 ## Lab 9 (new VPN keys, tls-crypt-v2)
 - [x] Kali server files in `/etc/openvpn/server/`: `ca.crt`, `kali-vpn-server.crt`, `kali-vpn-server.key`, `tc2-server.key`, `server.conf`. There is no `ta.key` any more.
