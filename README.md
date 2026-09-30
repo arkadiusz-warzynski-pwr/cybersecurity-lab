@@ -10,7 +10,7 @@ Virtual machines for the Cybersecurity labs 6–14.
 Login on Kali and Ubuntu: **`stud` / `stud`**.
 
 ## What you need
-- VirtualBox 7.2 (or newer) on an amd64 (Intel/AMD) computer
+- VirtualBox 7.2 (or newer) on an Intel/AMD computer (amd64) or a Mac with Apple Silicon (arm64). Each VM exists in both versions; the download command picks the right one.
 - About 50 GB of free disk space: Kali and Ubuntu take about 26 GB after import (33 GB with the second Ubuntu for lab 9) and grow as you use them; the downloaded `.ova` files (about 11 GB) can be deleted after import
 - Each VM is set to 4 GB RAM. Lab 9 runs three VMs at once; if your computer has less memory, lower the RAM of the Ubuntu VMs in their settings.
 
@@ -57,18 +57,23 @@ It becomes `ubuntu-b` with the client B VPN files and restarts. *Ubuntu Lab 2026
    VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on
    ```
    Or in VirtualBox: *File → Tools → Network Manager → NAT Networks → Create*, with the same name and prefix.
-2. **Download** from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) all `.part` files and `SHA256SUMS` into one folder. GitHub limits files to 2 GB, so each VM is split into parts. **Join** them:
+2. **Download** from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) the `.part` files of your version (file names ending in `-amd64` for Intel/AMD, `-arm64` for Apple Silicon Macs) and `SHA256SUMS` into one folder. GitHub limits files to 2 GB, so each VM is split into parts. **Join** them:
    - Windows (Command Prompt; in PowerShell put `cmd /c` in front):
      ```
      copy /b Kali-Lab-2026-2027-amd64.ova.part1 + Kali-Lab-2026-2027-amd64.ova.part2 + Kali-Lab-2026-2027-amd64.ova.part3 + Kali-Lab-2026-2027-amd64.ova.part4 Kali-Lab-2026-2027-amd64.ova
      copy /b Ubuntu-Lab-2026-2027-amd64.ova.part1 + Ubuntu-Lab-2026-2027-amd64.ova.part2 Ubuntu-Lab-2026-2027-amd64.ova
      ```
-   - Linux / macOS:
+   - Linux / Intel Mac:
      ```
      cat Kali-Lab-2026-2027-amd64.ova.part* > Kali-Lab-2026-2027-amd64.ova
      cat Ubuntu-Lab-2026-2027-amd64.ova.part* > Ubuntu-Lab-2026-2027-amd64.ova
      ```
-   **Check** the files against `SHA256SUMS`: on Linux `sha256sum -c SHA256SUMS`, on macOS `shasum -a 256 -c SHA256SUMS`, on Windows (PowerShell) `Get-FileHash Kali-Lab-2026-2027-amd64.ova` and compare with the value in `SHA256SUMS`. Every line must be `OK` or the hash must match; otherwise download the damaged part again. Afterwards the `.part` files can be deleted.
+   - Apple Silicon Mac:
+     ```
+     cat Kali-Lab-2026-2027-arm64.ova.part* > Kali-Lab-2026-2027-arm64.ova
+     cat Ubuntu-Lab-2026-2027-arm64.ova.part* > Ubuntu-Lab-2026-2027-arm64.ova
+     ```
+   **Check** the files against `SHA256SUMS`: on Linux `sha256sum -c SHA256SUMS --ignore-missing`, on macOS `shasum -a 256 -c SHA256SUMS --ignore-missing`, on Windows (PowerShell) `Get-FileHash Kali-Lab-2026-2027-amd64.ova` and compare with the value in `SHA256SUMS`. Every line must be `OK` or the hash must match; otherwise download the damaged part again. Afterwards the `.part` files can be deleted.
 3. **Import** each file: *File → Import Appliance*.
 4. **Second Ubuntu for lab 9:** clone the Ubuntu VM (*Clone → Generate new MAC addresses for all network adapters*) or import the Ubuntu OVA a second time, then run `sudo lab-client B` in the copy as above.
 

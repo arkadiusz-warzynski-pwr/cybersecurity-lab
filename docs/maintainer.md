@@ -92,4 +92,6 @@ Certificates are valid until 2031 (CA until 2036).
 - [x] Import test of the final OVAs: both boot to the login screen and get addresses on the Lab NAT Network
 - [x] OVAs published as GitHub release [`2026-2027`](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/tag/2026-2027) (split into parts under 2 GiB, `SHA256SUMS`; joining checked with `cat` and `copy /b`)
 - [ ] Lab instruction updates (see [lab-fixes.md](lab-fixes.md))
-- [ ] Test on arm64 (Mac)
+- [x] Test on arm64 (Mac): Kali 2026.2 and Ubuntu 26.04.1 built on Apple Silicon, lab 9 end to end (AES-256-GCM and DES-CBC/MD5), guest additions (clipboard, display resize), import test
+- [x] arm64 OVAs added to release `2026-2027` (`SHA256SUMS` lists amd64 and arm64; release notes split by architecture)
+- [ ] Student download test on an Apple Silicon Mac (`get-vms.sh` from the README)
