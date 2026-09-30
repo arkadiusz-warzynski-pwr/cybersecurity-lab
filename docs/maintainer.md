@@ -55,6 +55,8 @@ The student scripts (`scripts/get-vms.*`) download from the latest release and r
 arm64 OVAs can be added to the same release later; the scripts pick them up on Apple Silicon.
 
 ### Apple Silicon (arm64)
+Step-by-step runbook: [macos-build.md](macos-build.md).
+
 The playbooks choose the architecture themselves; all Kali and Ubuntu packages and the Juice Shop build exist for arm64 (checked 2026-09-29). Only the Ubuntu guest additions package is amd64-only, so on arm64 it is skipped.
 1. On the Mac: VirtualBox 7.2 for Apple Silicon, and the same NAT Network (`VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`).
 2. Quick test: install Kali (arm64 installer ISO) and Ubuntu 26.04.1 (arm64 desktop ISO), then run Option 2 from the README (`ansible-pull`) in both and go through lab 9.
