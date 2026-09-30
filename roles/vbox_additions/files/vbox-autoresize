@@ -1,0 +1,8 @@
+#!/bin/sh
+# Xfce session helper (arm64, Guest Additions from the ISO). VBoxDRMClient sets
+# the new window size as the display's preferred mode; GNOME switches to it by
+# itself, Xfce does not. On every RandR output change ("output Virtual-1, crtc
+# ...") switch that output to its preferred mode.
+stdbuf -oL xev -root -event randr | while read -r key output rest; do
+    [ "$key" = output ] && xrandr --output "${output%,}" --auto
+done

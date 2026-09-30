@@ -4,9 +4,10 @@
 # Kali pass -e course_user=$USER, and their existing password is left alone.
 course_user: stud
 course_user_password_hash: "$6$cyberlab2026$vbisW2XXfP.f7RI2.A34p32kxRVfgv9d/tS55RcSMty2uUBfk8DfdB.ARW23lvfnv2D.P6Hr3QOYV5BjuO9oX/"
-# Same groups as the default Kali user
+# Same groups as the default Kali user, plus vboxdrmipc: lets the session's
+# VBoxClient talk to VBoxDRMClient (Guest Additions from the ISO, arm64)
 course_user_groups: [adm, dialout, cdrom, floppy, sudo, audio, dip, video, plugdev, users, lpadmin,
-                     netdev, scanner, bluetooth, wireshark, kaboxer, vboxsf]
+                     netdev, scanner, bluetooth, wireshark, kaboxer, vboxsf, vboxdrmipc]
 course_home: "/home/{{ course_user }}"
 
 # --- Packages ----------------------------------------------------------

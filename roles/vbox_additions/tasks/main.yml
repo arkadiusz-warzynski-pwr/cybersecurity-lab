@@ -1,0 +1,97 @@
+---
+# arm64 only: Kali and Ubuntu package the guest additions (virtualbox-guest-x11)
+# for amd64 only, so on Apple Silicon they come from the Guest Additions ISO of
+# the host's VirtualBox. Attach it with the VM powered off (changing the medium
+# of a running arm64 VM hangs the guest):
+#   VBoxManage storageattach <vm> --storagectl VirtioSCSI --port 1 --device 0 --type dvddrive --medium additions
+# Without the ISO this role does nothing. Runs before the user role, which adds
+# the course user to the vboxsf group only if it exists.
+- name: Check for installed Guest Additions
+  ansible.builtin.find:
+    paths: /opt
+    patterns: "VBoxGuestAdditions-*"
+    file_type: directory
+  register: vbox_installed
+  when: deb_arch == 'arm64'
+
+- name: Look for the Guest Additions ISO
+  ansible.builtin.find:
+    paths: /dev/disk/by-label
+    patterns: "VBox_GAs_*"
+    file_type: link
+  register: vbox_iso
+  when: deb_arch == 'arm64'
+
+- name: Install Guest Additions from the ISO
+  when:
+    - deb_arch == 'arm64'
+    - vbox_installed.matched == 0
+    - vbox_iso.matched > 0
+  block:
+    # The modules are built for every installed kernel; the headers metapackage
+    # keeps them buildable after kernel upgrades.
+    - name: Install build dependencies
+      ansible.builtin.apt:
+        name:
+          - build-essential
+          - bzip2
+          - "{{ 'linux-headers-arm64' if ansible_distribution == 'Kali' else 'linux-headers-generic' }}"
+        state: present
+
+    - name: Mount the Guest Additions ISO
+      ansible.builtin.command: mount -o ro {{ vbox_iso.files[0].path }} /mnt
+      changed_when: false
+
+    # Exits non-zero when it cannot build for the running kernel (no headers
+    # after an upgrade installed a newer one); the check below decides.
+    - name: Run the Guest Additions installer
+      ansible.builtin.command: sh /mnt/VBoxLinuxAdditions-arm64.run
+      register: vbox_run
+      failed_when: false
+      changed_when: true
+
+    - name: Unmount the Guest Additions ISO
+      ansible.builtin.command: umount /mnt
+      changed_when: false
+
+    - name: Build the modules for all installed kernels
+      ansible.builtin.command: /sbin/rcvboxadd quicksetup all
+      changed_when: true
+
+    # misc/ holds the modules built by the installer (Ubuntu's kernel also
+    # ships an older in-tree vboxguest)
+    - name: Check that the modules exist for the newest kernel
+      ansible.builtin.shell: |
+        k=$(ls /lib/modules | sort -V | tail -n 1)
+        ls /lib/modules/$k/misc/vboxguest.ko* >/dev/null 2>&1 || { echo "no vboxguest for $k"; exit 1; }
+      changed_when: false
+
+- name: Check for Xfce
+  ansible.builtin.stat:
+    path: /usr/bin/xfce4-session
+  register: xfce_session
+  when: deb_arch == 'arm64'
+
+# Display resize under Xfce (Kali); see files/vbox-autoresize
+- name: Install the Xfce display resize helper
+  when:
+    - deb_arch == 'arm64'
+    - xfce_session.stat.exists
+    - vbox_installed.matched > 0 or vbox_iso.matched > 0
+  block:
+    - name: Install xev and xrandr
+      ansible.builtin.apt:
+        name: [x11-utils, x11-xserver-utils]
+        state: present
+
+    - name: Install the resize helper
+      ansible.builtin.copy:
+        src: vbox-autoresize
+        dest: /usr/local/bin/vbox-autoresize
+        mode: "0755"
+
+    - name: Start the resize helper with the Xfce session
+      ansible.builtin.copy:
+        src: vbox-autoresize.desktop
+        dest: /etc/xdg/autostart/vbox-autoresize.desktop
+        mode: "0644"

@@ -10,6 +10,7 @@
     enabled_services: [apache2, ssh]
   roles:
     - base
+    - vbox_additions
     - user
     - tools
     - juiceshop

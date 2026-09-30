@@ -25,6 +25,7 @@
       when: lab_client_file.content is defined
   roles:
     - base
+    - vbox_additions
     - user
     - ubuntu_tools
     - vpn_clients

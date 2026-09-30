@@ -23,7 +23,8 @@ How the course VMs are built, what is where, and what is still open. Student ins
 | `tools` | Kali | tools used in labs 6–14 |
 | `juiceshop` | Kali | prebuilt Juice Shop in `~/Desktop/juice-shop` (labs 13–14) |
 | `openvpn` | Kali | lab 9 VPN server in `/etc/openvpn/server` (not auto-started; IP forwarding on start) |
-| `ubuntu_tools` | Ubuntu | OpenSSL, GnuPG, EasyRSA, OpenVPN, netcat, SSH server, guest additions |
+| `ubuntu_tools` | Ubuntu | OpenSSL, GnuPG, EasyRSA, OpenVPN, netcat, SSH server, guest additions (amd64) |
+| `vbox_additions` | both | arm64: guest additions from the VirtualBox Guest Additions ISO, if attached; display resize helper for Xfce (Kali) |
 | `vpn_clients` | Ubuntu | both lab 9 clients in `/usr/local/share/cyberlab/vpn`, this VM's client in `~/Desktop/VPN`, the `lab-client A\|B` command |
 | `easyrsa_lab7` | Ubuntu | empty EasyRSA folder `~/openvpn-ca` for lab 7 |
 
@@ -57,7 +58,7 @@ arm64 OVAs can be added to the same release later; the scripts pick them up on A
 ### Apple Silicon (arm64)
 Step-by-step runbook: [macos-build.md](macos-build.md).
 
-The playbooks choose the architecture themselves; all Kali and Ubuntu packages and the Juice Shop build exist for arm64 (checked 2026-09-29). Only the Ubuntu guest additions package is amd64-only, so on arm64 it is skipped.
+The playbooks choose the architecture themselves; all Kali and Ubuntu packages and the Juice Shop build exist for arm64 (checked 2026-09-29). Only the guest additions packages are amd64-only; on arm64 the `vbox_additions` role builds them from the Guest Additions ISO attached to the build VM (it does nothing without the ISO).
 1. On the Mac: VirtualBox 7.2 for Apple Silicon, and the same NAT Network (`VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`).
 2. Quick test: install Kali (arm64 installer ISO) and Ubuntu 26.04.1 (arm64 desktop ISO), then run Option 2 from the README (`ansible-pull`) in both and go through lab 9.
 3. OVAs: build as above. For Kali from the installer, create the build user `kali` during installation (or pass `-e build_user=<name>` to `seal.yml`). Export with `build/export.sh`; it names the files `…-arm64.ova` by itself:
@@ -67,6 +68,8 @@ The playbooks choose the architecture themselves; all Kali and Ubuntu packages a
 
 ### Pitfalls from the 2026 build
 - Take VirtualBox snapshots only with the VM powered off; live snapshots hung on the build host.
+- On arm64, change a VM's DVD medium only with the VM powered off; changing it while running hung the guest's disk I/O.
+- The Guest Additions from the ISO resize the display through VBoxDRMClient, which only sets the new preferred mode. GNOME switches to it, Xfce does not, so Kali gets `/usr/local/bin/vbox-autoresize` (Xfce autostart), which runs `xrandr --output <output> --auto` on every RandR output change.
 - After `seal.yml` has started, new SSH connections fail (the host keys are deleted). Stream its log over a connection opened before.
 - `seal.yml` must not delete anything the running playbook uses (`~/.ansible`, the repo copy, `/tmp`); that is done by the final `seal-finalize` script after the playbook ends.
 - Zero-fill: `sync` before deleting the zero file, otherwise several GB of old data stay in free space and the OVA grows. Check an exported disk with `zerofree -n`.

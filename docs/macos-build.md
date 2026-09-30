@@ -2,7 +2,7 @@
 
 Goal: **Kali Lab 2026-2027** and **Ubuntu Lab 2026-2027** for Apple Silicon, added to the existing GitHub release [`2026-2027`](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/tag/2026-2027) next to the amd64 files. Same configuration as amd64: user `stud` / `stud`, 4 GB RAM, 2 CPUs, Lab NAT Network. General build notes and pitfalls: [maintainer.md](maintainer.md).
 
-The playbooks choose the architecture themselves (`deb_arch` in `group_vars/all.yml`): all packages and the Juice Shop build exist for arm64; the Ubuntu guest additions package is amd64-only and is skipped. `build/export.sh` names the files `…-arm64.ova` by itself, and the student scripts pick arm64 files on Apple Silicon.
+The playbooks choose the architecture themselves (`deb_arch` in `group_vars/all.yml`): all packages and the Juice Shop build exist for arm64; the guest additions packages are amd64-only, so on arm64 the `vbox_additions` role installs them from the Guest Additions ISO of the Mac's VirtualBox. `build/export.sh` names the files `…-arm64.ova` by itself, and the student scripts pick arm64 files on Apple Silicon.
 
 ## 0. Prerequisites on the Mac
 - VirtualBox 7.2 or newer, the **macOS / Apple Silicon** build. Check: `VBoxManage --version`.
@@ -52,10 +52,15 @@ On the Mac: `ssh-copy-id -i ~/.ssh/cyberlab_build.pub <user>@<vm-ip>` (asks for 
 
 Shut the VMs down and take snapshots **with the VM powered off**: `before-provision` (Kali), `clean-install` (Ubuntu).
 
+Then, still powered off, replace the installer ISO with the Guest Additions ISO; the playbook installs them from it (changing the medium of a running arm64 VM hangs the guest):
+```bash
+VBoxManage storageattach <vm> --storagectl VirtioSCSI --port 1 --device 0 --type dvddrive --medium additions
+```
+
 ## 3. Provisioning
 From the repository folder on the Mac (`K=~/.ssh/cyberlab_build`, `H=<user>@<vm-ip>`). Copy only the files git tracks, without macOS metadata (`._*` files, extended attributes):
 ```bash
-git ls-files -co --exclude-standard | COPYFILE_DISABLE=1 tar --no-mac-metadata -cf - -T - \
+git ls-files -co --exclude-standard | COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs -cf - -T - \
   | ssh -i $K $H 'mkdir -p ~/cybersecurity-lab && tar xf - -C ~/cybersecurity-lab'
 ssh -i $K $H 'sudo apt-get update -qq && sudo apt-get install -y ansible-core'
 ssh -i $K $H 'cd ~/cybersecurity-lab && setsid nohup ansible-playbook kali.yml > ~/provision.log 2>&1 < /dev/null &'   # ubuntu.yml on Ubuntu
@@ -64,6 +69,7 @@ The run includes a full upgrade and takes a while. Follow it with `ssh -i $K $H 
 
 ## 4. Tests before sealing
 - Both: re-run the playbook once; it should finish with `failed=0` and few changes.
+- Both: Guest Additions: `/opt/VBoxGuestAdditions-*` exists, and after a reboot `lsmod | grep vboxguest` lists the module. Logged in on the desktop, the clipboard works in both directions and the desktop follows the window size.
 - **Kali:** Juice Shop (arm64 build) starts: `sudo -u stud bash -lc 'cd ~/Desktop/juice-shop && timeout 90 npm start' &` then `curl -s -o /dev/null -w '%{http_code}' localhost:3000` returns `200`. Spot-check a few tools (`nmap`, `zaproxy`, `amap`, `p0f`, `tctrace`, `wireshark`).
 - **Lab 9 end to end** (see the Lab 9 items in [lab-fixes.md](lab-fixes.md)):
   1. Take a snapshot of the Ubuntu build VM (powered off), then clone it: `VBoxManage clonevm ubuntu-26.04-arm64-build --name ubuntu-arm64-B --register` (new MAC addresses by default). Start the clone and run `sudo lab-client B` in it.
@@ -80,6 +86,7 @@ ssh -i $K $H 'cd ~/cybersecurity-lab && ansible-playbook build/seal.yml -e build
 When the VM is off, take a snapshot `sealed-<date>`.
 
 ## 6. Export
+Eject the Guest Additions ISO first (VM powered off): `VBoxManage storageattach <vm> --storagectl VirtioSCSI --port 1 --device 0 --type dvddrive --medium emptydrive`.
 ```bash
 build/export.sh --vm kali-2026.2-arm64-build  --name "Kali Lab 2026-2027"   --version 2026.2  --out ~/cyberlab-ova
 build/export.sh --vm ubuntu-26.04-arm64-build --name "Ubuntu Lab 2026-2027" --version 26.04.1 --out ~/cyberlab-ova
