@@ -8,8 +8,13 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 - [x] The lab network is the VirtualBox NAT Network **Lab NAT Network**, `172.16.96.0/24`, as labs 9, 11 and 12 already say. The Kali OVA is attached to it. Add a setup step telling students to create it first (`VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`); the Ubuntu VMs must use the same network. The download scripts from the README create it automatically.
 - [x] Several commands contain en dashes (`–`) instead of `--`, which break when copied (lab 7 gpg commands, lab 12 `nmap –p1-65535 –A`).
 
-## Lab 6
-- [x] CrypTool 1 is not included in the VM.
+## Lab 6 (hash functions, DH)
+- [x] CrypTool 1 is not included in the VM. The CrypTool hash-collision task and the "CrypTool" prerequisites are kept for now but flagged with a Word comment (decision: comment-only). Needs a replacement (command-line collision demo) or removal before the semester.
+- [x] The Diffie-Hellman half uses OpenSSL and works on the 2026 VMs (Kali + Ubuntu). `Ubuntu Server` -> `Ubuntu`; EN `OpenSSL pkeyutl` -> `openssl pkeyutl` (case-sensitive); PL `Demosntracja`/`Zadnia` typos.
+
+## Lab 8 (MitM: ARP/DNS spoofing)
+- [x] Metasploitable 2 is a student download (see Lab 12); note added. `Metasplitable` -> `Metasploitable`, `Ubuntu Server VM` -> `Ubuntu VM`, `APR` -> `ARP`, `dsn_spoof` -> `dns_spoof`, EN `snffing` -> `sniffing`. PL: the second `etter.dns` entry is now the wildcard `*.pwr.edu.pl` (was a duplicate of the first).
+- [ ] Test the ARP/DNS-spoof MitM on the target network (needs Kali + Ubuntu + Metasploitable on one L2). A Word comment flags this; verify Ettercap 0.8.4 GUI menu names.
 
 ## Lab 7 (Ubuntu, independent of lab 9)
 - [x] The EasyRSA folder is `~/openvpn-ca`, not `/home/server/EasyRSA-3.0.10`. It starts empty: `vars.example` is present and there is no `pki/`, so students build the CA themselves.
