@@ -29,12 +29,15 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 - [x] Section IV (netcat between Ubuntu A and B through the VPN): the server routes client-to-client traffic through the kernel, so Kali enables IP forwarding (and disables ICMP redirects, which otherwise show up as ping errors) when the VPN server starts. Tested with Ubuntu A (10.88.88.2) and B (10.88.88.3): ping 0% loss, `nc -l -p 7777` on B and `nc 10.88.88.3 7777` on A work as written, and the traffic is visible on Kali's `tun0` (each packet twice: in and out). A 50 MB file took about 6 s (AES-256-GCM), so the 900 MB transfer in task 4.2 takes about 1.5 minutes per setting.
 - [ ] Wireshark filter: `ssl.record.version == 0x0303` → `tls.record.version == 0x0303`.
 
-## Lab 10
+## Lab 10 (OSINT)
 - [x] `p0f` and `tctrace` (irpas) are now installed.
-- [ ] `theHarvester -b linkedin`: check which sources the current version supports.
+- [x] `theHarvester -b linkedin`: `linkedin` was removed from theHarvester. Changed to `-b duckduckgo` (works without an API key) + a Word comment to verify current sources with `theHarvester -h` on the Kali VM. EN also `theharvester` -> `theHarvester` (case-sensitive binary).
+- [x] `npin` -> `nping` in the tool list.
+- [x] Metasploitable 2/3 listed as a required VM: added a download note (see Lab 12).
 
-## Lab 11
+## Lab 11 (network reconnaissance)
 - [x] `amap` and Zenmap are installed.
+- [x] En dashes fixed in `-g`, `-sT`/`-sN` option lists and `-O`. EN typo `DIFFERNCE` -> `DIFFERENCE`. Metasploitable download note added.
 
 ## Lab 12 (Metasploitable 2)
 - [x] Metasploitable 2 is **not** distributed in the release. Under "required VMs", students are told to download the official image (https://sourceforge.net/projects/metasploitable/) and attach it to the **Lab NAT Network** (same network as Kali).
@@ -43,7 +46,8 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 - [ ] The distcc/udev exploit walkthrough (steps and CVE-2009-1185) is unchanged; retest end to end against Kali 2026.2 and a current Metasploitable 2 before the semester.
 
 ## Labs 13-14 (Juice Shop 20.2.0)
-- [x] Juice Shop is in `~/Desktop/juice-shop`; start it with `npm start` and open `localhost:3000`.
-- [ ] Walk through every step against 20.2.0. The labs were written for an older version. `main-es2015.js` is probably `main.js` now, and ZAP 2.16 renamed its proxy options.
+- [x] Juice Shop is in `~/Desktop/juice-shop`; start it with `npm start` and open `localhost:3000`. Folder path clarified in the lab text.
+- [x] `main-es2015.js` -> `main.js` (confirmed: the 20.2.0 frontend bundle is `main.js`).
+- [ ] Walk through every step against 20.2.0 on the running Kali (needs GUI login). A Word comment in labs 13 and 14 flags this; option names and the challenge UI may differ. ZAP 2.16 renamed its proxy options.
 - [ ] Lab 13 step XII (snapd + Postman on Kali): check it still works.
 - [ ] Lab 14 CSRF: check `htmledit.squarefree.com` still exists and the attack works with current Firefox cookie defaults.
