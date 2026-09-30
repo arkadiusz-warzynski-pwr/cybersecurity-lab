@@ -2,11 +2,11 @@
 
 Goal: **Kali Lab 2026-2027** and **Ubuntu Lab 2026-2027** for Apple Silicon, added to the existing GitHub release [`2026-2027`](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/tag/2026-2027) next to the amd64 files. Same configuration as amd64: user `stud` / `stud`, 4 GB RAM, 2 CPUs, Lab NAT Network. General build notes and pitfalls: [maintainer.md](maintainer.md).
 
-The playbooks choose the architecture themselves (`deb_arch` in `group_vars/all.yml`): all packages and the Juice Shop build exist for arm64; the Ubuntu guest additions package is amd64-only and is skipped. `build/export.ps1` names the files `…-arm64.ova` by itself, and the student scripts pick arm64 files on Apple Silicon.
+The playbooks choose the architecture themselves (`deb_arch` in `group_vars/all.yml`): all packages and the Juice Shop build exist for arm64; the Ubuntu guest additions package is amd64-only and is skipped. `build/export.sh` names the files `…-arm64.ova` by itself, and the student scripts pick arm64 files on Apple Silicon.
 
 ## 0. Prerequisites on the Mac
 - VirtualBox 7.2 or newer, the **macOS / Apple Silicon** build. Check: `VBoxManage --version`.
-- Homebrew, then: `brew install --cask powershell` (for `export.ps1`), `brew install coreutils gh` (`gsplit` for the release parts, GitHub CLI).
+- Homebrew, then: `brew install coreutils gh` (`gsplit` for the release parts, GitHub CLI).
 - About 100 GB free disk space (two build VMs, a clone for the lab 9 test, OVAs, parts).
 - The repository: `git clone https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab.git`. Set the repo-local git identity before committing.
 - The lab network, once: `VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on`
@@ -32,7 +32,7 @@ Create each VM with the wizard (it sets the correct ARM defaults: EFI, storage c
 | Disk | 80 GB, dynamically allocated | 30 GB, dynamically allocated |
 | Network (for the build) | Bridged Adapter (Wi-Fi/Ethernet), so the Mac can reach it by SSH | same |
 
-`export.ps1` switches the adapter to the Lab NAT Network at export time.
+`export.sh` switches the adapter to the Lab NAT Network at export time.
 
 ### Installing the systems
 - **Kali:** graphical install, default Xfce desktop and tool selection. Create the user **`kali`** (it is the temporary build user; `build/seal.yml` deletes it). Partitioning: guided, entire disk, **all files in one partition** (a single ext4 root keeps the zero-fill simple).
@@ -81,8 +81,8 @@ When the VM is off, take a snapshot `sealed-<date>`.
 
 ## 6. Export
 ```bash
-pwsh ./build/export.ps1 -VmName kali-2026.2-arm64-build  -Name "Kali Lab 2026-2027"   -Version 2026.2  -OutDir ~/cyberlab-ova
-pwsh ./build/export.ps1 -VmName ubuntu-26.04-arm64-build -Name "Ubuntu Lab 2026-2027" -Version 26.04.1 -OutDir ~/cyberlab-ova
+build/export.sh --vm kali-2026.2-arm64-build  --name "Kali Lab 2026-2027"   --version 2026.2  --out ~/cyberlab-ova
+build/export.sh --vm ubuntu-26.04-arm64-build --name "Ubuntu Lab 2026-2027" --version 26.04.1 --out ~/cyberlab-ova
 ```
 Result: `Kali-Lab-2026-2027-arm64.ova`, `Ubuntu-Lab-2026-2027-arm64.ova` and a `.sha256` file for each. The sizes should be close to the amd64 ones (Kali about 7 GB, Ubuntu about 4 GB); a much larger file means the zero-fill did not work.
 

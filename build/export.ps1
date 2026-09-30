@@ -1,6 +1,6 @@
 # Export a sealed build VM as an OVA with a SHA256 checksum.
 # Sets the student defaults (RAM, CPUs, lab NAT Network) before exporting.
-# Runs in Windows PowerShell and in PowerShell 7 (pwsh) on macOS / Linux.
+# Windows; on macOS / Linux use export.sh (same settings, options --vm, --name, ...).
 #   .\build\export.ps1 -VmName "kali-2026.2-build"  -Name "Kali Lab 2026-2027"   -Version 2026.2
 #   .\build\export.ps1 -VmName "ubuntu-26.04-build" -Name "Ubuntu Lab 2026-2027" -Version 26.04.1
 param(
