@@ -132,8 +132,11 @@
           pkill -KILL -u {{ build_user }}
           userdel -r {{ build_user }}
           {% else %}
-          rm -f /home/{{ build_user }}/.ssh/authorized_keys
-          rm -rf /home/{{ build_user }}/.ansible /home/{{ build_user }}/Cybersecurity-lab
+          rm -f /home/{{ build_user }}/.ssh/authorized_keys /home/{{ build_user }}/provision*.log /home/{{ build_user }}/seal.log
+          rm -rf /home/{{ build_user }}/.ansible
+          {% if (playbook_dir | dirname).startswith('/home/' ~ build_user ~ '/') %}
+          rm -rf {{ playbook_dir | dirname }}
+          {% endif %}
           {% endif %}
           rm -rf /root/.ansible
           find /tmp -mindepth 1 -maxdepth 1 ! -name 'systemd-private-*' ! -name '.*-unix' -exec rm -rf {} +
