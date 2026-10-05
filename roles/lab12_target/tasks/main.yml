@@ -1,0 +1,65 @@
+---
+# Lab 12 target: a self-contained vulnerable "production system" as a Docker
+# stack on Kali, replacing the Metasploitable 2 download. Architecture and the
+# attack scenario: docs/lab12-redesign.md. amd64 only for now (see the guard).
+#
+# The image is built here at provision time (build host / student Kali both have
+# internet) and, on the OVA, baked in so students never rebuild. Uses the docker
+# CLI, not the community.docker collection, so it works under plain ansible-core.
+
+- name: Lab 12 target is amd64-only for now
+  ansible.builtin.debug:
+    msg: "lab12_target skipped: only amd64 is supported at the moment (arch={{ deb_arch }})"
+  when: deb_arch != 'amd64'
+
+- name: Provision the Lab 12 target
+  when: deb_arch == 'amd64'
+  block:
+    - name: Install Docker engine
+      ansible.builtin.apt:
+        name:
+          - docker.io   # Kali has no compose v2 package; the lab12-target
+        state: present  # helper uses plain `docker run`, so compose isn't needed
+
+    - name: Enable and start Docker
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Add the course user to the docker group
+      ansible.builtin.user:
+        name: "{{ course_user }}"
+        groups: docker
+        append: true
+
+    - name: Install the target build context
+      ansible.builtin.copy:
+        src: target/
+        dest: "{{ lab12_dir }}/"
+        owner: root
+        group: root
+        mode: preserve
+
+    - name: Install the lab12-target helper
+      ansible.builtin.copy:
+        src: kali/lab12-target
+        dest: /usr/local/bin/lab12-target
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Check whether the target image already exists
+      ansible.builtin.command: docker image inspect {{ lab12_image }}
+      register: lab12_img
+      changed_when: false
+      failed_when: false
+
+    # Build at provision time so the image is inside the OVA. The lab12-target
+    # helper creates the network on first start; students never rebuild.
+    - name: Build the target image
+      ansible.builtin.command: >
+        docker build -t {{ lab12_image }} {{ lab12_dir }}
+      when: lab12_img.rc != 0
+      register: lab12_build
+      changed_when: lab12_build.rc == 0

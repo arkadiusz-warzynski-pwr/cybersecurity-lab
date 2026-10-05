@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "James Smith",
+    "department": "Sales",
+    "email": "james.smith@cybertron.example"
+  },
+  {
+    "id": 2,
+    "name": "Mary Johnson",
+    "department": "Marketing",
+    "email": "mary.johnson@cybertron.example"
+  },
+  {
+    "id": 3,
+    "name": "John Williams",
+    "department": "HR",
+    "email": "john.williams@cybertron.example"
+  }
+]

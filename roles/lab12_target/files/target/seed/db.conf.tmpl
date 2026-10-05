@@ -1,0 +1,9 @@
+# Salary service database configuration (task 3.3: the credential the student
+# finds after the initial foothold). @@SECRET@@ is replaced by entrypoint.sh on
+# every container start, so the value is never in the image. Readable by group
+# 'report' (the foothold accounts), which is the finding.
+db.host=127.0.0.1
+db.port=5432
+db.name=salary
+db.user=salary_admin
+db.password=@@SECRET@@
