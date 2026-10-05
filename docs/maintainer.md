@@ -56,6 +56,42 @@ The student scripts (`scripts/get-vms.*`) download from the latest release and r
 
 arm64 OVAs can be added to the same release later; the scripts pick them up on Apple Silicon.
 
+#### Refreshing a release within the same edition
+When a VM is rebuilt mid-edition (for example Kali with the lab 12 target), the refreshed OVAs go
+out as a **new release**, because the student scripts only ever read `releases/latest`. Three rules
+follow from how those scripts work, and getting any of them wrong fails quietly:
+
+1. **The rebuilt VM must get a new name.** The scripts skip a VM that is already in VirtualBox
+   (`in_vbox`, matching the name from the OVF descriptor), so a refreshed OVA exported under the old
+   name is silently never downloaded by anyone who already imported it — exactly the students who
+   need it. Add a parenthesised note to the name, and the export scripts derive the file name from
+   it:
+
+   | | current | refreshed |
+   |---|---|---|
+   | VM name | `Kali Lab 2026-2027` | `Kali Lab 2026-2027 (lab12-updated)` |
+   | OVA | `Kali-Lab-2026-2027-amd64.ova` | `Kali-Lab-2026-2027-lab12-updated-amd64.ova` |
+
+   ```
+   .\build\export.ps1 -VmName <kali build VM> -Name "Kali Lab 2026-2027 (lab12-updated)" -Version 2026.2
+   ```
+
+2. **VMs that did not change keep their name and are re-uploaded unchanged.** The release must
+   contain *every* VM a new student needs, not just the rebuilt one: a student starting from scratch
+   gets only what is in the latest release. Keeping the name also means students who already have
+   that VM skip it (`'Ubuntu Lab 2026-2027' is already in VirtualBox`) and download only the rebuilt
+   one. `SHA256SUMS` lists every file in the new release, re-uploaded ones included.
+
+3. **Every architecture must be present, even one that was not rebuilt.** The scripts take only the
+   files matching the student's CPU, so a release with no `-arm64` Kali leaves Apple Silicon students
+   with no Kali at all. If only amd64 was rebuilt, re-upload the existing arm64 OVA **under its old
+   name**: arm64 students then keep the VM they have (and skip the download), while the differing
+   names make it visible that the two architectures are not at the same level. Say so in the release
+   notes.
+
+Release notes should also tell students to delete the superseded VM once the new one works —
+otherwise both sit in VirtualBox, and the Kali VMs are about 26 GB each after import.
+
 ### Apple Silicon (arm64)
 Step-by-step runbook: [macos-build.md](macos-build.md).
 
