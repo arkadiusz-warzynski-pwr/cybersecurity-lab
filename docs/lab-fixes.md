@@ -44,11 +44,16 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 - [x] `amap` and Zenmap are installed.
 - [x] En dashes fixed in `-g`, `-sT`/`-sN` option lists and `-O`. EN typo `DIFFERNCE` -> `DIFFERENCE`. Metasploitable download note added.
 
-## Lab 12 (Metasploitable 2)
-- [x] Metasploitable 2 is **not** distributed in the release. Under "required VMs", students are told to download the official image (https://sourceforge.net/projects/metasploitable/) and attach it to the **Lab NAT Network** (same network as Kali).
+## Lab 12 (Vulnerability exploitation)
+Being **redesigned** to drop the Metasploitable 2 download: the target becomes a Docker stack built
+into the Kali VM. Architecture and file plan: [lab12-redesign.md](lab12-redesign.md). New scenario
+draft: `lab-instructions/2026-2027/proposals/` (workspace). The items below describe the interim
+docx edits already made against the old (Metasploitable) version; they are superseded once the
+redesign lands.
+- [x] Metasploitable 2 is **not** distributed in the release. Interim: the docx tells students to download the official image (https://sourceforge.net/projects/metasploitable/) and attach it to the **Lab NAT Network**. The redesign removes this.
 - [x] En dashes fixed in `nmap –p1-65535 –A`, `uname –r`, `gcc … –o exploit` → `--`/`-`.
 - [x] Typo: `vsftd` → `vsftpd`.
-- [ ] The distcc/udev exploit walkthrough (steps and CVE-2009-1185) is unchanged; retest end to end against Kali 2026.2 and a current Metasploitable 2 before the semester.
+- [ ] The distcc/udev exploit walkthrough is being replaced (distccd is impractical on a current base). New vectors: vsftpd 2.3.4 (CVE-2011-2523) + Log4Shell (CVE-2021-44228) + a third, on the built target.
 
 ## Labs 13-14 (Juice Shop 20.2.0)
 - [x] Juice Shop is in `~/Desktop/juice-shop`; start it with `npm start` and open `localhost:3000`. Folder path clarified in the lab text.
