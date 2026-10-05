@@ -107,6 +107,27 @@
       ansible.builtin.shell: journalctl --rotate && journalctl --vacuum-time=1s
       changed_when: true
 
+    # Lab 12 (Kali) ships a prebuilt Docker image (roles/lab12_target). The
+    # multi-stage build leaves the base/build-stage images and a large build
+    # cache (~1.5 GB) that the final image does not need. Drop everything except
+    # the cyberlab/ image before the zero-fill, or the OVA bloats.
+    - name: Check whether Docker is installed
+      ansible.builtin.stat:
+        path: /usr/bin/docker
+      register: seal_docker
+
+    - name: Prune Docker to just the lab12 target image
+      ansible.builtin.shell: |
+        docker rm -f lab12-target 2>/dev/null || true
+        docker builder prune -af || true
+        keep=$(docker images --filter 'reference=cyberlab/*' -q | sort -u)
+        for id in $(docker images -q | sort -u); do
+          echo "$keep" | grep -qx "$id" || docker rmi -f "$id" 2>/dev/null || true
+        done
+        docker image prune -f || true
+      when: seal_docker.stat.exists
+      changed_when: true
+
     # sync must run before rm: zeros still in the page cache when the file is
     # deleted are never written, leaving old data in "free" space (~2.5 GB with 8 GB RAM)
     - name: Zero free disk space so the OVA compresses well
