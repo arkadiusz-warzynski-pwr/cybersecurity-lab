@@ -132,14 +132,22 @@ build → seal → export flow ([maintainer.md](maintainer.md)) applies, plus:
 - The image is built by the `lab12_target` role during `ansible-playbook kali.yml`
   (amd64). Nothing special at seal time except cleanup.
 - `build/seal.yml` prunes Docker before the zero-fill: it removes the build cache
-  and every image not in the `cyberlab/` repo (the base + build-stage images the
-  final image does not need), keeping `cyberlab/lab12-target:2026`. Without this
-  the OVA carries ~1.5 GB of maven/debian/temurin layers and cache.
+  and every image not in the `cyberlab/` repo, keeping `cyberlab/lab12-target:2026`.
+  Measured on the 2026-10-05 build: one image (307 MB, nothing reclaimable) and
+  **476 MB of build cache**, all reclaimable. There were no dangling base or
+  build-stage images at all — BuildKit keeps intermediates in the cache rather
+  than as images, so the cache is where the whole saving is.
 - `docker.io` is `state: present` (kept by apt autoremove) and enabled, and
   `stud` is in the docker group, so on a sealed OVA `lab12-target start` works on
   first boot with no rebuild.
 - Distribute from a full `kali.yml` build on the real build VM — not an ad-hoc
   clone with only Docker + the image hand-installed.
+- **Seal and export a VM with no snapshots** (full-clone it first). On a snapshot
+  disk the zero-fill is silently defeated and the OVA balloons; `build/export.*`
+  now refuses such a VM. See [maintainer.md](maintainer.md).
+
+Cost of the target in the shipped OVA, measured 2026-10-05: **6.79 GiB → 7.03 GiB
+(+3.6%)** against the previous Kali OVA without lab 12.
 
 Post-seal check (on a booted clone of the sealed VM): `lab12-target start`, then
 `bash roles/lab12_target/tests/verify.sh` should pass 11/11, and the docker
@@ -162,11 +170,12 @@ images list should show only `cyberlab/lab12-target:2026`.
       verified 11/11 instead of the current image.
 - [x] Role verified end to end on a VM under plain `ansible-core` (no `community.docker`): it builds
       the image itself and is idempotent on a second run.
-- [ ] Do the distributable build: full `kali.yml` on the real build VM, then `seal.yml` + export.
-      The clone used for testing has Docker and the image installed by hand and must not be the
-      source of a release.
-- [ ] Post-seal reboot check on a sealed clone: `lab12-target start`, `verify.sh` 11/11, and
-      `docker images` showing only `cyberlab/lab12-target:2026`.
+- [x] Distributable build done 2026-10-05 on `kali-2026.2-build` (full `kali.yml`, `ok=33
+      changed=20 failed=0`, `verify.sh` 11/11, vectors A/B/C validated). Sealed and exported from a
+      snapshot-free full clone as `Kali-Lab-2026-2027-lab12-updated-amd64.ova`, 7.03 GiB.
+- [ ] Post-seal reboot check: import the exported OVA, `lab12-target start`, `verify.sh` 11/11, and
+      `docker images` showing only `cyberlab/lab12-target:2026`. Needs a console login as `stud`
+      (the sealed image has no build user and no authorised key), so the instructor runs it.
 - [ ] arm64: the role skips arm64 (JDK 8 base + vsftpd + Docker networking on Apple Silicon
       unconfirmed). Until that is done an arm64 OVA carries no Lab 12 target — either do the work
       or state the limitation in the release notes.

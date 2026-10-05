@@ -110,6 +110,7 @@ The playbooks choose the architecture themselves; all Kali and Ubuntu packages a
 - After `seal.yml` has started, new SSH connections fail (the host keys are deleted). Stream its log over a connection opened before.
 - `seal.yml` must not delete anything the running playbook uses (`~/.ansible`, the repo copy, `/tmp`); that is done by the final `seal-finalize` script after the playbook ends.
 - Zero-fill: `sync` before deleting the zero file, otherwise several GB of old data stay in free space and the OVA grows. Check an exported disk with `zerofree -n`.
+- **Seal and export a VM that has no snapshots.** On a snapshot disk the zero-fill does nothing: the disk is a differencing image, VirtualBox does not store all-zero blocks, so those reads fall through to the parent, which still holds every file the seal deleted. The export merges the chain, ships that data and barely compresses — a 7 GB OVA came out at about 25 GB, with nothing reporting a problem. Full-clone the provisioned snapshot first and seal the clone: `VBoxManage clonevm <vm> --snapshot <snapshot> --mode machine --name <vm>-export --register`. The export scripts now refuse a VM with snapshots (`--allow-snapshots` / `-AllowSnapshots` overrides). Keep the snapshots on the original VM as the rollback.
 - Never boot a VM with a copy of its own disk attached: identical file-system UUIDs can make it boot the copy. Attach copies after boot.
 
 ## VPN keys (lab 9)
