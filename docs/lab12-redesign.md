@@ -177,6 +177,7 @@ images list should show only `cyberlab/lab12-target:2026`.
       so the anonymous listing is bare; `--restart unless-stopped` brings the container back after a
       reboot with the student's changes intact; `maven:3.8.6-openjdk-8` is a deprecated tag and the
       most likely thing to break a future rebuild.
-- [ ] `sudo lab12-target …` fails with "command not found" — Kali's sudo `secure_path` excludes
-      `/usr/local/bin`. Students do not need sudo (they are in the docker group), but the error is
-      misleading, so it is worth a line in the lab text.
+- [x] `sudo lab12-target …` used to fail with "command not found" (Kali's sudo `secure_path` leaves
+      out `/usr/local/bin`), and with stderr redirected it failed *silently*: the container was never
+      recreated and work continued against the container the student believed they had reset. The
+      role now links the helper into `/usr/sbin` as well, which is on `secure_path`.

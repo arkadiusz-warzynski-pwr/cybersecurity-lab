@@ -49,6 +49,17 @@
         group: root
         mode: "0755"
 
+    # Kali's sudo secure_path is /usr/sbin:/usr/bin:/sbin:/bin, which leaves out
+    # /usr/local/bin: `sudo lab12-target reset` then fails with "command not
+    # found", and with stderr redirected it fails silently - the container is
+    # never recreated and the student keeps working against the one they believe
+    # they reset. A link on secure_path removes that trap.
+    - name: Make the helper resolvable under sudo as well (secure_path)
+      ansible.builtin.file:
+        src: /usr/local/bin/lab12-target
+        dest: /usr/sbin/lab12-target
+        state: link
+
     - name: Check whether the target image already exists
       ansible.builtin.command: docker image inspect {{ lab12_image }}
       register: lab12_img
