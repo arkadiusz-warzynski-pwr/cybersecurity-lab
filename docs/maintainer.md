@@ -130,7 +130,7 @@ Certificates are valid until 2031 (CA until 2036).
 - [x] Import test of the final OVAs: both boot to the login screen and get addresses on the Lab NAT Network
 - [x] OVAs published as GitHub release [`2026-2027`](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/tag/2026-2027) (split into parts under 2 GiB, `SHA256SUMS`; joining checked with `cat` and `copy /b`)
 - [ ] Lab instruction updates (see [lab-fixes.md](lab-fixes.md))
-- [~] Lab 12 self-contained target (amd64): built by the `lab12_target` role into Kali, replacing the Metasploitable download; image + exploit chain validated on the VM (`verify.sh` 11/11), seal cleanup added. Still to do: a full `kali.yml` build + seal + export, a post-seal reboot check, and the docx. See [lab12-redesign.md](lab12-redesign.md).
+- [~] Lab 12 self-contained target (amd64): built by the `lab12_target` role into Kali, replacing the Metasploitable download. Built, sealed and exported 2026-10-05 as `Kali-Lab-2026-2027-lab12-updated-amd64.ova` (7.03 GiB, +3.6% over the OVA without it); exploit chain validated and the post-seal check on the imported OVA passed. Still to do: publish the refreshed release, arm64, and the docx. See [lab12-redesign.md](lab12-redesign.md).
 - [x] Test on arm64 (Mac): Kali 2026.2 and Ubuntu 26.04.1 built on Apple Silicon, lab 9 end to end (AES-256-GCM and DES-CBC/MD5), guest additions (clipboard, display resize), import test
 - [x] arm64 OVAs added to release `2026-2027` (`SHA256SUMS` lists amd64 and arm64; release notes split by architecture)
 - [x] Student download test on an Apple Silicon Mac (`get-vms.sh` from the README): only the arm64 files downloaded, both VMs imported, login screen and addresses on the Lab NAT Network

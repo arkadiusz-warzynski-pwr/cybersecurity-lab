@@ -173,9 +173,11 @@ images list should show only `cyberlab/lab12-target:2026`.
 - [x] Distributable build done 2026-10-05 on `kali-2026.2-build` (full `kali.yml`, `ok=33
       changed=20 failed=0`, `verify.sh` 11/11, vectors A/B/C validated). Sealed and exported from a
       snapshot-free full clone as `Kali-Lab-2026-2027-lab12-updated-amd64.ova`, 7.03 GiB.
-- [ ] Post-seal reboot check: import the exported OVA, `lab12-target start`, `verify.sh` 11/11, and
-      `docker images` showing only `cyberlab/lab12-target:2026`. Needs a console login as `stud`
-      (the sealed image has no build user and no authorised key), so the instructor runs it.
+- [x] Post-seal check passed 2026-10-05 on the imported OVA: VM name `Kali Lab 2026-2027
+      (lab12-updated)`, `docker images` showing only `cyberlab/lab12-target:2026` with an empty
+      build cache, `stud` reaching Docker without sudo, `lab12-target start` working with no
+      rebuild, `verify.sh` 11/11, `sudo lab12-target` resolving via the `/usr/sbin` link, and the
+      SSH host keys regenerated on first boot.
 - [ ] arm64: the role skips arm64 (JDK 8 base + vsftpd + Docker networking on Apple Silicon
       unconfirmed). Until that is done an arm64 OVA carries no Lab 12 target — either do the work
       or state the limitation in the release notes.
