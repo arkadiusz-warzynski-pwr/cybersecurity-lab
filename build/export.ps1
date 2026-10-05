@@ -11,7 +11,8 @@ param(
     [string]$OutDir = (Join-Path $PSScriptRoot 'out'),
     [int]$MemoryMB = 4096,
     [int]$Cpus = 2,
-    [string]$NatNetwork = 'Lab NAT Network'
+    [string]$NatNetwork = 'Lab NAT Network',
+    [switch]$AllowSnapshots            # export anyway (expect a much larger OVA)
 )
 $ErrorActionPreference = 'Stop'
 $vbm = if ($env:ProgramFiles) { Join-Path $env:ProgramFiles 'Oracle\VirtualBox\VBoxManage.exe' } else { 'VBoxManage' }
@@ -21,6 +22,19 @@ if ($LASTEXITCODE) { throw "VM '$VmName' not found" }
 function Get-VmValue($key) { (($info | Select-String "^$key=").Line -split '=', 2)[1].Trim('"') }
 $state = Get-VmValue 'VMState'
 if ($state -notin 'poweroff', 'aborted') { throw "VM '$VmName' must be powered off (state: $state)" }
+
+# A VM with snapshots runs on a differencing disk, and the zero-fill in seal.yml
+# cannot work there: VirtualBox does not store all-zero blocks, so those reads
+# fall through to the parent, which still holds every file the seal deleted. The
+# export merges the chain, ships that data and compresses badly - a ~7 GB OVA
+# came out at ~25 GB. Seal and export a full clone instead:
+#   VBoxManage clonevm <vm> --snapshot <snapshot> --mode machine --name <vm>-export --register
+$snapshots = @($info | Select-String '^SnapshotName')
+if ($snapshots.Count -gt 0 -and -not $AllowSnapshots) {
+    throw ("VM '$VmName' has $($snapshots.Count) snapshot(s), so its disk is a differencing image " +
+           "and seal.yml's zero-fill did not take effect. Full-clone it and export the clone " +
+           "(see the comment above this check), or pass -AllowSnapshots to export anyway.")
+}
 
 # Student defaults. The lab VMs share a VirtualBox NAT Network; students create it
 # once (see README), otherwise VirtualBox refuses to start the VM.

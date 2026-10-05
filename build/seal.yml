@@ -130,12 +130,27 @@
 
     # sync must run before rm: zeros still in the page cache when the file is
     # deleted are never written, leaving old data in "free" space (~2.5 GB with 8 GB RAM)
+    #
+    # dd is MEANT to end with ENOSPC, so its exit status says nothing; check
+    # instead that it really filled the filesystem. If it dies early (or /var/tmp
+    # turns out to be a tmpfs) the fill is silently partial, the deleted data
+    # stays readable in free blocks, and the OVA barely compresses.
     - name: Zero free disk space so the OVA compresses well
       ansible.builtin.shell: |
+        set -u
+        avail_before=$(df -Pk / | awk 'NR == 2 { print $4 }')
         dd if=/dev/zero of=/var/tmp/zero bs=4M status=none || true
+        written=$(du -Pk /var/tmp/zero 2>/dev/null | awk '{ print $1 }')
         sync
         rm -f /var/tmp/zero
         sync
+        echo "free before: ${avail_before} kB, zero file written: ${written:-0} kB"
+        # the fill has to take nearly all of what was free (root may also dip
+        # into the reserved blocks, so written can legitimately exceed it)
+        [ "${written:-0}" -ge "$(( avail_before / 10 * 9 ))" ] || {
+          echo "zero-fill covered too little of the free space - the OVA would keep old data" >&2
+          exit 1
+        }
       when: zero_free_space | bool
       changed_when: true
 

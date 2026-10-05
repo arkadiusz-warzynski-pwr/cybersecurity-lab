@@ -14,6 +14,7 @@ die() { echo "Error: $*" >&2; exit 1; }
 VM= NAME= VERSION= ARCH=
 OUT="$(cd "$(dirname "$0")" && pwd)/out"
 MEMORY=4096 CPUS=2 NATNET='Lab NAT Network'
+ALLOW_SNAPSHOTS=0
 while [ $# -gt 0 ]; do
     case $1 in
         --vm) VM=$2; shift 2 ;;               # build VM in VirtualBox
@@ -24,6 +25,7 @@ while [ $# -gt 0 ]; do
         --memory) MEMORY=$2; shift 2 ;;
         --cpus) CPUS=$2; shift 2 ;;
         --nat-network) NATNET=$2; shift 2 ;;
+        --allow-snapshots) ALLOW_SNAPSHOTS=1; shift ;;   # export anyway (expect a much larger OVA)
         *) die "unknown option: $1" ;;
     esac
 done
@@ -44,6 +46,19 @@ info=$("$VBM" showvminfo "$VM" --machinereadable | tr -d '\r') || die "VM '$VM' 
 vm_value() { printf '%s\n' "$info" | sed -n "s/^$1=\"\{0,1\}\([^\"]*\)\"\{0,1\}\$/\1/p" | head -n 1; }
 state=$(vm_value VMState)
 case $state in poweroff|aborted) ;; *) die "VM '$VM' must be powered off (state: $state)" ;; esac
+
+# A VM with snapshots runs on a differencing disk, and the zero-fill in seal.yml
+# cannot work there: VirtualBox does not store all-zero blocks, so those reads
+# fall through to the parent, which still holds every file the seal deleted. The
+# export merges the chain, ships that data and compresses badly - a ~7 GB OVA
+# came out at ~25 GB. Seal and export a full clone instead:
+#   VBoxManage clonevm <vm> --snapshot <snapshot> --mode machine --name <vm>-export --register
+snaps=$(printf '%s\n' "$info" | grep -c '^SnapshotName' || true)
+if [ "$snaps" -gt 0 ] && [ "$ALLOW_SNAPSHOTS" != 1 ]; then
+    die "VM '$VM' has $snaps snapshot(s), so its disk is a differencing image and seal.yml's
+zero-fill did not take effect. Full-clone it and export the clone (see the comment above this
+check), or pass --allow-snapshots to export anyway."
+fi
 
 # Student defaults. The lab VMs share a VirtualBox NAT Network; students create it
 # once (the download scripts do it), otherwise VirtualBox refuses to start the VM.
