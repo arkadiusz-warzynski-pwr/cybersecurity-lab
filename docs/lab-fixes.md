@@ -14,7 +14,8 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 
 ## Lab 8 (MitM: ARP/DNS spoofing)
 - [x] Metasploitable 2 is a student download (see Lab 12); note added. `Metasplitable` -> `Metasploitable`, `Ubuntu Server VM` -> `Ubuntu VM`, `APR` -> `ARP`, `dsn_spoof` -> `dns_spoof`, EN `snffing` -> `sniffing`. PL: the second `etter.dns` entry is now the wildcard `*.pwr.edu.pl` (was a duplicate of the first).
-- [ ] Test the ARP/DNS-spoof MitM on the target network (needs Kali + Ubuntu + Metasploitable on one L2). A Word comment flags this; verify Ettercap 0.8.4 GUI menu names.
+- [ ] Test the ARP/DNS-spoof MitM on the target network (Kali + Ubuntu on one L2). A Word comment flags this; verify Ettercap 0.8.4 GUI menu names.
+- [ ] **Metasploitable can be dropped from this lab.** The text uses it only as "maszyna z serwerem WWW" — the victim is the Ubuntu VM — and Kali already runs Apache, enabled by the `services` role precisely for lab 8 (`enabled_services: [apache2, ssh]`). Pointing the spoofed DNS entry at Kali's own address is also the more usual ettercap demonstration. Rewriting section II to need only Kali + Ubuntu removes an ~800 MB student download and matches the lab 12 direction.
 
 ## Lab 7 (Ubuntu, independent of lab 9)
 - [x] The EasyRSA folder is `~/openvpn-ca`, not `/home/server/EasyRSA-3.0.10`. It starts empty: `vars.example` is present and there is no `pki/`, so students build the CA themselves.
