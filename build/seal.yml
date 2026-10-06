@@ -128,6 +128,17 @@
       when: seal_docker.stat.exists
       changed_when: true
 
+    # The lab 12 build context (Dockerfile, app source, seeded configs) is copied
+    # onto the VM so the image can be built at provision time. Once it is built
+    # the context is dead weight: the lab12-target helper only runs `docker run`
+    # and never reads it. Leaving it would hand the student the target's source,
+    # so drop it here. Path matches roles/lab12_target/defaults/main.yml
+    # (lab12_dir); an `ansible-pull` re-creates it if anyone really rebuilds.
+    - name: Remove the lab 12 build context (the image is already built)
+      ansible.builtin.file:
+        path: /usr/local/share/cyberlab/lab12
+        state: absent
+
     # sync must run before rm: zeros still in the page cache when the file is
     # deleted are never written, leaving old data in "free" space (~2.5 GB with 8 GB RAM)
     #
