@@ -1,8 +1,7 @@
 ---
-# Lab 12 target: a self-contained vulnerable "production system" as a Docker
-# stack on Kali, replacing the Metasploitable 2 download. Architecture and the
-# attack scenario: docs/lab12-redesign.md. Runs on amd64 and arm64: all three
-# base images publish linux/arm64, and vsftpd 2.3.4 compiles on aarch64.
+# Lab 12 target: the "production system" audited in lab 12, built as a Docker
+# image on Kali, replacing the Metasploitable 2 download. Runs on amd64 and
+# arm64. Design notes are kept in the maintainer's workspace, not here.
 #
 # The image is built here at provision time (build host / student Kali both have
 # internet) and, on the OVA, baked in so students never rebuild. Uses the docker

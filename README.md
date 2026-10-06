@@ -89,7 +89,7 @@ sudo ansible-pull -U https://github.com/arkadiusz-warzynski-pwr/cybersecurity-la
 ```
 For a second Ubuntu, run `sudo lab-client B` in it afterwards. Add `-e full_upgrade=false` to skip the full system upgrade.
 
-On **Kali**, the run also builds the lab 12 target: it installs Docker, downloads the base images and compiles vsftpd and the Java app inside them. Expect a long first run (well over the rest of the playbook on a laptop) and a working internet connection throughout; it uses about 1.8 GB of disk, of which roughly 1.5 GB is build cache that stays behind — `docker builder prune -af` reclaims it once the image is built, leaving about 300 MB. Later runs reuse the finished image and skip the build. In the ready-made VMs (option 1) the image is already built, so none of this happens there.
+On **Kali**, the run also builds the lab 12 target: it installs Docker, downloads the base images and compiles the target services inside them. Expect a long first run (well over the rest of the playbook on a laptop) and a working internet connection throughout; it uses about 1.8 GB of disk, of which roughly 1.5 GB is build cache that stays behind — `docker builder prune -af` reclaims it once the image is built, leaving about 300 MB. Later runs reuse the finished image and skip the build. In the ready-made VMs (option 1) the image is already built, so none of this happens there.
 
 If the playbook stops with `TypeError: run_module() missing 1 required keyword-only argument: 'secrets'`, the full upgrade replaced `ansible-core` while it was running. Nothing is broken — run the same command again.
 

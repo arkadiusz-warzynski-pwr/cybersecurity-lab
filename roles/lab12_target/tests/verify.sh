@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Verify the Lab 12 target ENVIRONMENT is set up so the intended attack paths
-# are possible (A vsftpd 2.3.4 reachable + non-root, B Log4Shell app up with the
-# vulnerable flags, C writable root cron reachable from the foothold accounts).
-# It does NOT run exploits — that is the instructor's to author/test.
+# Verify the Lab 12 target environment matches its intended configuration:
+# services up on the expected ports, accounts and groups as designed, and the
+# designed file permissions in place. It does NOT run exploits - that is the
+# instructor's to author and test. What "intended" means is recorded in the
+# maintainer's workspace notes, not in this repository.
 #
 # Run inside the Kali VM after the lab12_target role has been applied:
 #   bash roles/lab12_target/tests/verify.sh
@@ -32,28 +33,28 @@ if [ -n "$img_tag" ] && [ -n "$img_run" ] && [ "$img_tag" != "$img_run" ]; then
   no "container is NOT running the current image (stale container)"
 fi
 
-echo "== A: vsftpd 2.3.4 (standalone; runs as root by design) =="
+echo "== FTP service =="
 banner=$( (exec 3<>/dev/tcp/$IP/21; head -1 <&3) 2>/dev/null )
 echo "$banner" | grep -q "2.3.4" && ok "vsftpd 2.3.4 banner on :21" || no "vsftpd 2.3.4 banner (got: $banner)"
 dex sh -c 'command -v vsftpd >/dev/null || test -x /usr/local/sbin/vsftpd' && ok "vsftpd binary present" || no "vsftpd binary missing"
 
-echo "== B: Log4Shell salary app, vulnerable flags, non-root =="
+echo "== salary app =="
 code=$(curl -s -o /dev/null -w '%{http_code}' "http://$IP:9876/" )
 [ "$code" = 200 ] && ok "web app HTTP 200 on :9876" || no "web app HTTP (got $code)"
-dex sh -c 'ps -o args= -C java' | grep -q "trustURLCodebase=true" && ok "app started with JNDI lookups enabled" || no "JNDI flag not on java cmdline"
+dex sh -c 'ps -o args= -C java' | grep -q "trustURLCodebase=true" && ok "app started with the expected runtime flags" || no "expected runtime flag not on the java cmdline"
 juser=$(dex ps -o user= -C java | head -1 | tr -d ' ')
 [ -n "$juser" ] && [ "$juser" != root ] && ok "salary app runs non-root (user $juser)" || no "salary app not non-root (user '$juser')"
 
-echo "== C: writable root cron privesc =="
+echo "== reporting cron =="
 dex test -f /etc/cron.d/report && ok "root cron /etc/cron.d/report present" || no "cron job missing"
 perms=$(dex stat -c '%U:%G %A' /opt/report/run.sh)
 echo "$perms" | grep -q "root:report" && echo "$perms" | grep -q "rwxrwx" && ok "run.sh root:report, group-writable + executable ($perms)" || no "run.sh perms wrong ($perms)"
-dex sh -c 'getent group report' | grep -qw "app" && ok "foothold account app in group report" || no "app not in group report"
+dex sh -c 'getent group report' | grep -qw "app" && ok "account app in group report" || no "app not in group report"
 
-echo "== escalation prerequisites =="
+echo "== accounts and services =="
 cred=$(dex stat -c '%U:%G %a' /etc/salary/db.conf)
-echo "$cred" | grep -q "root:report 640" && ok "seeded cred /etc/salary/db.conf (root:report 640)" || no "cred file perms ($cred)"
-dex sh -c 'command -v sshd >/dev/null' && ok "sshd installed (student enables it in task 3.5)" || no "sshd not installed"
+echo "$cred" | grep -q "root:report 640" && ok "/etc/salary/db.conf present (root:report 640)" || no "/etc/salary/db.conf perms ($cred)"
+dex sh -c 'command -v sshd >/dev/null' && ok "sshd installed" || no "sshd not installed"
 # Distinguish "sshd not running" from "pgrep missing": a bare `pgrep` failure
 # would otherwise be read as a pass (procps is installed explicitly for this).
 if ! dex sh -c 'command -v pgrep >/dev/null'; then

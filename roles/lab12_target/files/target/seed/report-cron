@@ -1,4 +1,3 @@
-# Vector C: a root-run "reporting" job every minute. It executes a helper that
-# is group-writable by 'report' (see run.sh perms) — the student overwrites the
-# helper and the next tick runs their code as root.
+# Reporting job. Runs every minute for the reporting pilot; the reporting team
+# maintains the helper it calls.
 * * * * * root /opt/report/run.sh >/var/log/report.log 2>&1

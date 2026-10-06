@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.cybertron</groupId>
-    <artifactId>log4shell-app</artifactId>
+    <artifactId>salary-app</artifactId>
     <version>1.0.0</version>
 
     <parent>
