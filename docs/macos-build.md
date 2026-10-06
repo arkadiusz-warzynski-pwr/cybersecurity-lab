@@ -50,6 +50,16 @@ ip -4 addr show   # note the bridged IP address
 ```
 On the Mac: `ssh-copy-id -i ~/.ssh/cyberlab_build.pub <user>@<vm-ip>` (asks for the VM password once), then check `ssh -i ~/.ssh/cyberlab_build <user>@<vm-ip> sudo -n true`.
 
+If the VM's `eth0` comes up but never gets an address, the Wi-Fi network is probably refusing the
+bridged adapter's second MAC (common on guest, campus and hotspot networks). Use NAT with an SSH
+port forward instead — it needs nothing from the network and still gives the VM internet:
+```bash
+VBoxManage controlvm <vm> nic1 nat
+VBoxManage controlvm <vm> natpf1 "ssh,tcp,127.0.0.1,2222,,22"
+```
+Then the VM is `ssh -p 2222 <user>@127.0.0.1`. It is a build-time setting only; `export.sh`
+rewrites the adapter to the Lab NAT Network at export.
+
 Shut the VMs down and take snapshots **with the VM powered off**: `before-provision` (Kali), `clean-install` (Ubuntu).
 
 Then, still powered off, replace the installer ISO with the Guest Additions ISO; the playbook installs them from it (changing the medium of a running arm64 VM hangs the guest):
@@ -83,7 +93,15 @@ Open the SSH connection first and keep it; `seal.yml` deletes the host keys, so 
 ssh -i $K $H 'cd ~/cybersecurity-lab && ansible-playbook build/seal.yml 2>&1 | tee ~/seal.log'                                              # Kali
 ssh -i $K $H 'cd ~/cybersecurity-lab && ansible-playbook build/seal.yml -e build_user=stud -e remove_build_user=false 2>&1 | tee ~/seal.log'  # Ubuntu
 ```
-When the VM is off, take a snapshot `sealed-<date>`.
+**Do not snapshot between sealing and exporting.** `build/export.sh` refuses a VM that has any
+snapshot, because a snapshot turns the disk into a differencing image where the zero-fill is
+silently defeated (see the pitfalls in [maintainer.md](maintainer.md)). Seal and export a
+snapshot-free full clone, and keep the rollback point on the VM you cloned *from*:
+```bash
+VBoxManage snapshot <vm> take provisioned --description "..."          # on the build VM
+VBoxManage clonevm <vm> --snapshot provisioned --mode machine --name <vm>-export --register
+```
+Then seal `<vm>-export` and export it straight away, with no snapshot in between.
 
 ## 6. Export
 Eject the Guest Additions ISO first (VM powered off): `VBoxManage storageattach <vm> --storagectl VirtioSCSI --port 1 --device 0 --type dvddrive --medium emptydrive`.
