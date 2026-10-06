@@ -2,6 +2,9 @@
 
 Changes the lab PDFs need so they match the 2026 VMs (Kali 2026.2 and Ubuntu 26.04).
 Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the new build.
+Everything a shell can check is asserted by `tests/verify-lab-env.sh`, which runs inside the Kali
+VM; what is left open below needs a GUI or a second machine. Last run 2026-10-06 on the rebuilt
+Kali: 38 passed, 1 failed (ZAP, see labs 13-14).
 
 ## General
 - [x] The user on both Kali and Ubuntu is `stud` (home `/home/stud`). The PDFs also say `kali`, `student` and `server`.
@@ -37,7 +40,7 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 
 ## Lab 10 (OSINT)
 - [x] `p0f` and `tctrace` (irpas) are now installed.
-- [x] `theHarvester -b linkedin`: `linkedin` was removed from theHarvester. Changed to `-b duckduckgo` (works without an API key) + a Word comment to verify current sources with `theHarvester -h` on the Kali VM. EN also `theharvester` -> `theHarvester` (case-sensitive binary).
+- [x] `theHarvester -b linkedin`: `linkedin` was removed from theHarvester. Changed to `-b duckduckgo` (works without an API key). Verified 2026-10-06 on the VM: `duckduckgo` is still offered and there is still no `linkedin` source, so the docx is correct and the Word comment is answered. EN also `theharvester` -> `theHarvester` (case-sensitive binary).
 - [x] `npin` -> `nping` in the tool list.
 - [x] Metasploitable 2/3 listed as a required VM: added a download note (see Lab 12).
 
@@ -58,6 +61,8 @@ deliberately not in this repository.
 ## Labs 13-14 (Juice Shop 20.2.0)
 - [x] Juice Shop is in `~/Desktop/juice-shop`; start it with `npm start` and open `localhost:3000`. Folder path clarified in the lab text.
 - [x] `main-es2015.js` -> `main.js` (confirmed: the 20.2.0 frontend bundle is `main.js`).
-- [ ] Walk through every step against 20.2.0 on the running Kali (needs GUI login). A Word comment in labs 13 and 14 flags this; option names and the challenge UI may differ. ZAP 2.16 renamed its proxy options.
-- [ ] Lab 13 step XII (snapd + Postman on Kali): check it still works.
+- [x] Verified 2026-10-06 on the VM: Juice Shop 20.2.0 is at `~/Desktop/juice-shop` and its frontend bundle really is `main.js`.
+- [ ] **The VM ships ZAP 2.17.0-0kali1, but the ZAP steps were written against 2.16**, so they need a walkthrough rather than a spot check: 2.16 had already renamed the proxy options and 2.17 may have moved them again. A Word comment in labs 13 and 14 flags this.
+- [ ] Walk through every step against 20.2.0 on the running Kali (needs a GUI login); option names and the challenge UI may differ.
+- [ ] Lab 13 step 12 (snapd + Postman): snapd is deliberately **not** on the VM - the step installs it itself - so what needs checking is that `sudo apt install snapd` and `snap install postman` still work on current Kali.
 - [ ] Lab 14 CSRF: check `htmledit.squarefree.com` still exists and the attack works with current Firefox cookie defaults.
