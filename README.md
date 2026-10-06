@@ -4,10 +4,12 @@ Virtual machines for the Cybersecurity labs 6–14.
 
 | VM | Used in |
 |---|---|
-| **Kali Lab 2026-2027** (Kali 2026.2) | labs 6–14 |
-| **Ubuntu Lab 2026-2027** (Ubuntu 26.04) | labs 6–9; lab 9 needs two copies (client A and B) |
+| **Kali Lab 2026-2027 (lab12-updated)** – Kali 2026.2 | labs 6–14 |
+| **Ubuntu Lab 2026-2027** – Ubuntu 26.04 | labs 6–9; lab 9 needs two copies (client A and B) |
 
 Login on Kali and Ubuntu: **`stud` / `stud`**.
+
+The Kali VM was rebuilt for lab 12, so in VirtualBox it appears as *Kali Lab 2026-2027 (lab12-updated)*. If you already imported an earlier *Kali Lab 2026-2027*, use the new one for labs 6–14; the old one can be removed (right-click it, *Remove*, then *Delete all files*) to free the disk space. The Ubuntu VM is unchanged.
 
 ## What you need
 - VirtualBox 7.2 (or newer) on an Intel/AMD computer (amd64) or a Mac with Apple Silicon (arm64). Each VM exists in both versions; the download command picks the right one.
@@ -19,7 +21,7 @@ Install [VirtualBox 7.2 or newer](https://www.virtualbox.org/wiki/Downloads) fir
 - downloads the VMs from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) (about 11 GB) into `Downloads/cyberlab-vms`
 - checks them against `SHA256SUMS` and downloads damaged parts again
 - creates the VirtualBox NAT Network **Lab NAT Network** (`172.16.96.0/24`), which all lab VMs use
-- imports **Kali Lab 2026-2027** and **Ubuntu Lab 2026-2027 A**
+- imports **Kali Lab 2026-2027 (lab12-updated)** and **Ubuntu Lab 2026-2027 A**
 
 If it is interrupted (network, sleep, closed window), run the same command again: it continues where it stopped. VMs that are already in VirtualBox are not downloaded again.
 
@@ -57,23 +59,23 @@ It becomes `ubuntu-b` with the client B VPN files and restarts. *Ubuntu Lab 2026
    VBoxManage natnetwork add --netname "Lab NAT Network" --network 172.16.96.0/24 --enable --dhcp on
    ```
    Or in VirtualBox: *File → Tools → Network Manager → NAT Networks → Create*, with the same name and prefix.
-2. **Download** from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) the `.part` files of your version (file names ending in `-amd64` for Intel/AMD, `-arm64` for Apple Silicon Macs) and `SHA256SUMS` into one folder. GitHub limits files to 2 GB, so each VM is split into parts. **Join** them:
+2. **Download** from the [latest release](https://github.com/arkadiusz-warzynski-pwr/cybersecurity-lab/releases/latest) the `.part` files of your version (file names ending in `-amd64` for Intel/AMD, `-arm64` for Apple Silicon Macs) and `SHA256SUMS` into one folder. GitHub limits files to 2 GB, so each VM is split into parts. The names below are the ones in the current release; if a later release renames a VM, use the names listed in `SHA256SUMS`. **Join** them:
    - Windows (Command Prompt; in PowerShell put `cmd /c` in front):
      ```
-     copy /b Kali-Lab-2026-2027-amd64.ova.part1 + Kali-Lab-2026-2027-amd64.ova.part2 + Kali-Lab-2026-2027-amd64.ova.part3 + Kali-Lab-2026-2027-amd64.ova.part4 Kali-Lab-2026-2027-amd64.ova
+     copy /b Kali-Lab-2026-2027-lab12-updated-amd64.ova.part1 + Kali-Lab-2026-2027-lab12-updated-amd64.ova.part2 + Kali-Lab-2026-2027-lab12-updated-amd64.ova.part3 + Kali-Lab-2026-2027-lab12-updated-amd64.ova.part4 Kali-Lab-2026-2027-lab12-updated-amd64.ova
      copy /b Ubuntu-Lab-2026-2027-amd64.ova.part1 + Ubuntu-Lab-2026-2027-amd64.ova.part2 Ubuntu-Lab-2026-2027-amd64.ova
      ```
    - Linux / Intel Mac:
      ```
-     cat Kali-Lab-2026-2027-amd64.ova.part* > Kali-Lab-2026-2027-amd64.ova
+     cat Kali-Lab-2026-2027-lab12-updated-amd64.ova.part* > Kali-Lab-2026-2027-lab12-updated-amd64.ova
      cat Ubuntu-Lab-2026-2027-amd64.ova.part* > Ubuntu-Lab-2026-2027-amd64.ova
      ```
    - Apple Silicon Mac:
      ```
-     cat Kali-Lab-2026-2027-arm64.ova.part* > Kali-Lab-2026-2027-arm64.ova
+     cat Kali-Lab-2026-2027-lab12-updated-arm64.ova.part* > Kali-Lab-2026-2027-lab12-updated-arm64.ova
      cat Ubuntu-Lab-2026-2027-arm64.ova.part* > Ubuntu-Lab-2026-2027-arm64.ova
      ```
-   **Check** the files against `SHA256SUMS`: on Linux `sha256sum -c SHA256SUMS --ignore-missing`, on macOS `shasum -a 256 -c SHA256SUMS --ignore-missing`, on Windows (PowerShell) `Get-FileHash Kali-Lab-2026-2027-amd64.ova` and compare with the value in `SHA256SUMS`. Every line must be `OK` or the hash must match; otherwise download the damaged part again. Afterwards the `.part` files can be deleted.
+   **Check** the files against `SHA256SUMS`: on Linux `sha256sum -c SHA256SUMS --ignore-missing`, on macOS `shasum -a 256 -c SHA256SUMS --ignore-missing`, on Windows (PowerShell) `Get-FileHash Kali-Lab-2026-2027-lab12-updated-amd64.ova` and compare with the value in `SHA256SUMS`. Every line must be `OK` or the hash must match; otherwise download the damaged part again. Afterwards the `.part` files can be deleted.
 3. **Import** each file: *File → Import Appliance*.
 4. **Second Ubuntu for lab 9:** clone the Ubuntu VM (*Clone → Generate new MAC addresses for all network adapters*) or import the Ubuntu OVA a second time, then run `sudo lab-client B` in the copy as above.
 
