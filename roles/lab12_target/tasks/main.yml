@@ -1,19 +1,14 @@
 ---
 # Lab 12 target: a self-contained vulnerable "production system" as a Docker
 # stack on Kali, replacing the Metasploitable 2 download. Architecture and the
-# attack scenario: docs/lab12-redesign.md. amd64 only for now (see the guard).
+# attack scenario: docs/lab12-redesign.md. Runs on amd64 and arm64: all three
+# base images publish linux/arm64, and vsftpd 2.3.4 compiles on aarch64.
 #
 # The image is built here at provision time (build host / student Kali both have
 # internet) and, on the OVA, baked in so students never rebuild. Uses the docker
 # CLI, not the community.docker collection, so it works under plain ansible-core.
 
-- name: Lab 12 target is amd64-only for now
-  ansible.builtin.debug:
-    msg: "lab12_target skipped: only amd64 is supported at the moment (arch={{ deb_arch }})"
-  when: deb_arch != 'amd64'
-
 - name: Provision the Lab 12 target
-  when: deb_arch == 'amd64'
   block:
     - name: Install Docker engine
       ansible.builtin.apt:

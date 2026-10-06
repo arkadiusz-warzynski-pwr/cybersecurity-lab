@@ -27,7 +27,7 @@ How the course VMs are built, what is where, and what is still open. Student ins
 | `vbox_additions` | both | arm64: guest additions from the VirtualBox Guest Additions ISO, if attached; display resize helper for Xfce (Kali) |
 | `vpn_clients` | Ubuntu | both lab 9 clients in `/usr/local/share/cyberlab/vpn`, this VM's client in `~/Desktop/VPN`, the `lab-client A\|B` command |
 | `easyrsa_lab7` | Ubuntu | empty EasyRSA folder `~/openvpn-ca` for lab 7 |
-| `lab12_target` | Kali | lab 12 target image built into the VM (amd64 only), the `lab12-target` start/stop/reset command — see [lab12-redesign.md](lab12-redesign.md) |
+| `lab12_target` | Kali | lab 12 target image built into the VM (amd64 and arm64), the `lab12-target` start/stop/reset command — see [lab12-redesign.md](lab12-redesign.md) |
 
 Shared settings are in `group_vars/all.yml`, per-VM settings at the top of each playbook.
 
@@ -112,6 +112,7 @@ The playbooks choose the architecture themselves; all Kali and Ubuntu packages a
 - Zero-fill: `sync` before deleting the zero file, otherwise several GB of old data stay in free space and the OVA grows. Check an exported disk with `zerofree -n`.
 - **Seal and export a VM that has no snapshots.** On a snapshot disk the zero-fill does nothing: the disk is a differencing image, VirtualBox does not store all-zero blocks, so those reads fall through to the parent, which still holds every file the seal deleted. The export merges the chain, ships that data and barely compresses — a 7 GB OVA came out at about 25 GB, with nothing reporting a problem. Full-clone the provisioned snapshot first and seal the clone: `VBoxManage clonevm <vm> --snapshot <snapshot> --mode machine --name <vm>-export --register`. The export scripts now refuse a VM with snapshots (`--allow-snapshots` / `-AllowSnapshots` overrides). Keep the snapshots on the original VM as the rollback.
 - Never boot a VM with a copy of its own disk attached: identical file-system UUIDs can make it boot the copy. Attach copies after boot.
+- Re-provisioning a VM that is more than a few days old: `base : Upgrade all packages` can upgrade `ansible-core` **underneath the running playbook**, and the next module call dies with `TypeError: run_module() missing 1 required keyword-only argument: 'secrets'`. Nothing is wrong with the playbook — run it again, the second run uses consistent code. Seen 2026-10-06 re-provisioning a sealed 2026-09-30 Kali (2.21.2 → 2.22.0~beta1; Kali rolling currently ships an ansible-core beta, which students get too via `ansible-pull`).
 
 ## VPN keys (lab 9)
 Every VM gets the same keys: `roles/openvpn/files/` (Kali server) and `roles/vpn_clients/files/` (Ubuntu clients A and B). They are for the isolated lab network only and public on purpose, since every student receives them in the VMs anyway.

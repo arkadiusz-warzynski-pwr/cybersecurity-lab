@@ -9,8 +9,8 @@ VM. Scenario source: `lab-instructions/2026-2027/proposals/Cyber_PL_Lab_Eksploit
 - **Target delivery:** Docker on Kali. The target runs as container(s) on a Docker bridge with a
   fixed IP; the student recons and attacks that IP from Kali. One VM, nothing downloaded at lab
   time (images built into the OVA, like Juice Shop).
-- **Architecture scope:** amd64 first. arm64 once the JDK 8 / vsftpd base images are confirmed to
-  build on ARM (see Open items). The role is a no-op on arm64 until then.
+- **Architecture scope:** amd64 and arm64. All three base images publish `linux/arm64`, vsftpd
+  2.3.4 compiles on aarch64, and both live vectors were validated there (see Open items).
 - **Instruction depth:** the lab text gives the narrative, task groups, the three documented
   attack vectors as objectives, and tool pointers. Exploit payloads/commands are authored and
   tested by the instructor on the running VM, not shipped in this repo.
@@ -178,9 +178,11 @@ images list should show only `cyberlab/lab12-target:2026`.
       build cache, `stud` reaching Docker without sudo, `lab12-target start` working with no
       rebuild, `verify.sh` 11/11, `sudo lab12-target` resolving via the `/usr/sbin` link, and the
       SSH host keys regenerated on first boot.
-- [ ] arm64: the role skips arm64 (JDK 8 base + vsftpd + Docker networking on Apple Silicon
-      unconfirmed). Until that is done an arm64 OVA carries no Lab 12 target — either do the work
-      or state the limitation in the release notes.
+- [x] arm64 done 2026-10-06 on Apple Silicon: `debian:bookworm`, `maven:3.8.6-openjdk-8` and
+      `eclipse-temurin:8-jre-jammy` all publish `linux/arm64`, so the role needed no change beyond
+      dropping the guard. Image builds natively (296 MB vs 307 MB on amd64), `verify.sh` 11/11,
+      and the two compiled/live vectors were confirmed on aarch64: the vsftpd `:)` backdoor opens
+      a root shell on 6200, and `app` escalates to root through the group-writable cron helper.
 - [ ] Write the Lab 12 docx from the proposal (structure + hints; instructor authors the exploits).
 - [ ] Provenance: vsftpd backdoor compiled from a third-party repo (inspected, matches CVE-2011-2523).
 - [ ] Scenario decisions still open: the recon task says "nmap TCP+UDP" but the target exposes no UDP

@@ -3,7 +3,7 @@
 # that follows any comment, and stage 2 needs the BuildKit frontend for
 # RUN --mount=type=cache; ignored, the build breaks on a legacy-builder host.
 #
-# Lab 12 target: designed vulnerable "production system" (amd64).
+# Lab 12 target: designed vulnerable "production system" (amd64 and arm64).
 # Three findings: A vsftpd 2.3.4 backdoor (CVE-2011-2523), B Log4Shell in the
 # salary app (CVE-2021-44228), C writable root cron job (privesc). See
 # docs/lab12-redesign.md.
