@@ -9,7 +9,7 @@ Items marked `[x]` are confirmed on the VMs; `[ ]` still need checking on the ne
 - [x] Several commands contain en dashes (`–`) instead of `--`, which break when copied (lab 7 gpg commands, lab 12 `nmap –p1-65535 –A`).
 
 ## Lab 6 (hash functions, DH)
-- [x] CrypTool 1 is not included in the VM. The CrypTool hash-collision task and the "CrypTool" prerequisites are kept for now but flagged with a Word comment (decision: comment-only). Needs a replacement (command-line collision demo) or removal before the semester.
+- [x] CrypTool 1 is not included in the VM, and is not going to be: **students install it themselves ahead of the lab**, so the hash-collision task and the "CrypTool" prerequisites stay as written. No replacement needed (decided 2026-10-06).
 - [x] The Diffie-Hellman half uses OpenSSL and works on the 2026 VMs (Kali + Ubuntu). `Ubuntu Server` -> `Ubuntu`; EN `OpenSSL pkeyutl` -> `openssl pkeyutl` (case-sensitive); PL `Demosntracja`/`Zadnia` typos.
 
 ## Lab 8 (MitM: ARP/DNS spoofing)
