@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=VirtualBox display resize
+Exec=/usr/local/bin/vbox-autoresize
+OnlyShowIn=XFCE;
+NoDisplay=true

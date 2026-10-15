@@ -107,14 +107,61 @@
       ansible.builtin.shell: journalctl --rotate && journalctl --vacuum-time=1s
       changed_when: true
 
+    # Lab 12 (Kali) ships a prebuilt Docker image (roles/lab12_target). The
+    # multi-stage build leaves the base/build-stage images and a large build
+    # cache (~1.5 GB) that the final image does not need. Drop everything except
+    # the cyberlab/ image before the zero-fill, or the OVA bloats.
+    - name: Check whether Docker is installed
+      ansible.builtin.stat:
+        path: /usr/bin/docker
+      register: seal_docker
+
+    - name: Prune Docker to just the lab12 target image
+      ansible.builtin.shell: |
+        docker rm -f lab12-target 2>/dev/null || true
+        docker builder prune -af || true
+        keep=$(docker images --filter 'reference=cyberlab/*' -q | sort -u)
+        for id in $(docker images -q | sort -u); do
+          echo "$keep" | grep -qx "$id" || docker rmi -f "$id" 2>/dev/null || true
+        done
+        docker image prune -f || true
+      when: seal_docker.stat.exists
+      changed_when: true
+
+    # The lab 12 build context (Dockerfile, app source, seeded configs) is copied
+    # onto the VM so the image can be built at provision time. Once it is built
+    # the context is dead weight: the lab12-target helper only runs `docker run`
+    # and never reads it. Leaving it would hand the student the target's source,
+    # so drop it here. Path matches roles/lab12_target/defaults/main.yml
+    # (lab12_dir); an `ansible-pull` re-creates it if anyone really rebuilds.
+    - name: Remove the lab 12 build context (the image is already built)
+      ansible.builtin.file:
+        path: /usr/local/share/cyberlab/lab12
+        state: absent
+
     # sync must run before rm: zeros still in the page cache when the file is
     # deleted are never written, leaving old data in "free" space (~2.5 GB with 8 GB RAM)
+    #
+    # dd is MEANT to end with ENOSPC, so its exit status says nothing; check
+    # instead that it really filled the filesystem. If it dies early (or /var/tmp
+    # turns out to be a tmpfs) the fill is silently partial, the deleted data
+    # stays readable in free blocks, and the OVA barely compresses.
     - name: Zero free disk space so the OVA compresses well
       ansible.builtin.shell: |
+        set -u
+        avail_before=$(df -Pk / | awk 'NR == 2 { print $4 }')
         dd if=/dev/zero of=/var/tmp/zero bs=4M status=none || true
+        written=$(du -Pk /var/tmp/zero 2>/dev/null | awk '{ print $1 }')
         sync
         rm -f /var/tmp/zero
         sync
+        echo "free before: ${avail_before} kB, zero file written: ${written:-0} kB"
+        # the fill has to take nearly all of what was free (root may also dip
+        # into the reserved blocks, so written can legitimately exceed it)
+        [ "${written:-0}" -ge "$(( avail_before / 10 * 9 ))" ] || {
+          echo "zero-fill covered too little of the free space - the OVA would keep old data" >&2
+          exit 1
+        }
       when: zero_free_space | bool
       changed_when: true
 
@@ -132,8 +179,11 @@
           pkill -KILL -u {{ build_user }}
           userdel -r {{ build_user }}
           {% else %}
-          rm -f /home/{{ build_user }}/.ssh/authorized_keys
-          rm -rf /home/{{ build_user }}/.ansible /home/{{ build_user }}/Cybersecurity-lab
+          rm -f /home/{{ build_user }}/.ssh/authorized_keys /home/{{ build_user }}/provision*.log /home/{{ build_user }}/seal.log
+          rm -rf /home/{{ build_user }}/.ansible
+          {% if (playbook_dir | dirname).startswith('/home/' ~ build_user ~ '/') %}
+          rm -rf {{ playbook_dir | dirname }}
+          {% endif %}
           {% endif %}
           rm -rf /root/.ansible
           find /tmp -mindepth 1 -maxdepth 1 ! -name 'systemd-private-*' ! -name '.*-unix' -exec rm -rf {} +

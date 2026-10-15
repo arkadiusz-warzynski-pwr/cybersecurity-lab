@@ -1,27 +1,47 @@
 # Export a sealed build VM as an OVA with a SHA256 checksum.
 # Sets the student defaults (RAM, CPUs, lab NAT Network) before exporting.
-#   .\build\export.ps1 -VmName "kali-linux-2026.2-virtualbox-amd64" -Name "Kali Lab 2026-2027" -Version 2026.2
-#   .\build\export.ps1 -VmName "ubuntu-26.04-build"   -Name "Ubuntu Lab 2026-2027 A" -Version 26.04.1
+# Windows; on macOS / Linux use export.sh (same settings, options --vm, --name, ...).
+#   .\build\export.ps1 -VmName "kali-2026.2-build"  -Name "Kali Lab 2026-2027"   -Version 2026.2
+#   .\build\export.ps1 -VmName "ubuntu-26.04-build" -Name "Ubuntu Lab 2026-2027" -Version 26.04.1
 param(
     [Parameter(Mandatory)] [string]$VmName,   # build VM in VirtualBox
     [Parameter(Mandatory)] [string]$Name,     # VM name students see after import
     [string]$Version = '',
-    [string]$Arch = 'amd64',
+    [string]$Arch = '',                       # amd64 / arm64; default: from the VM
     [string]$OutDir = (Join-Path $PSScriptRoot 'out'),
     [int]$MemoryMB = 4096,
     [int]$Cpus = 2,
-    [string]$NatNetwork = 'Lab NAT Network'
+    [string]$NatNetwork = 'Lab NAT Network',
+    [switch]$AllowSnapshots            # export anyway (expect a much larger OVA)
 )
 $ErrorActionPreference = 'Stop'
-$vbm = Join-Path $env:ProgramFiles 'Oracle\VirtualBox\VBoxManage.exe'
+$vbm = if ($env:ProgramFiles) { Join-Path $env:ProgramFiles 'Oracle\VirtualBox\VBoxManage.exe' } else { 'VBoxManage' }
 
-$state = ((& $vbm showvminfo $VmName --machinereadable | Select-String '^VMState=').Line -split '=')[1].Trim('"')
+$info = & $vbm showvminfo $VmName --machinereadable
+if ($LASTEXITCODE) { throw "VM '$VmName' not found" }
+function Get-VmValue($key) { (($info | Select-String "^$key=").Line -split '=', 2)[1].Trim('"') }
+$state = Get-VmValue 'VMState'
 if ($state -notin 'poweroff', 'aborted') { throw "VM '$VmName' must be powered off (state: $state)" }
+
+# A VM with snapshots runs on a differencing disk, and the zero-fill in seal.yml
+# cannot work there: VirtualBox does not store all-zero blocks, so those reads
+# fall through to the parent, which still holds every file the seal deleted. The
+# export merges the chain, ships that data and compresses badly - a ~7 GB OVA
+# came out at ~25 GB. Seal and export a full clone instead:
+#   VBoxManage clonevm <vm> --snapshot <snapshot> --mode machine --name <vm>-export --register
+$snapshots = @($info | Select-String '^SnapshotName')
+if ($snapshots.Count -gt 0 -and -not $AllowSnapshots) {
+    throw ("VM '$VmName' has $($snapshots.Count) snapshot(s), so its disk is a differencing image " +
+           "and seal.yml's zero-fill did not take effect. Full-clone it and export the clone " +
+           "(see the comment above this check), or pass -AllowSnapshots to export anyway.")
+}
 
 # Student defaults. The lab VMs share a VirtualBox NAT Network; students create it
 # once (see README), otherwise VirtualBox refuses to start the VM.
 & $vbm modifyvm $VmName --memory $MemoryMB --cpus $Cpus --nic1 natnetwork --nat-network1 $NatNetwork --clipboard-mode bidirectional --drag-and-drop bidirectional
 if ($LASTEXITCODE) { throw "modifyvm failed" }
+
+if (-not $Arch) { $Arch = if ((Get-VmValue 'platformArchitecture') -eq 'ARM') { 'arm64' } else { 'amd64' } }
 
 # "Kali Lab 2026-2027" -> Kali-Lab-2026-2027-amd64.ova
 $fileBase = ($Name -replace '[^A-Za-z0-9]+', '-').Trim('-')
@@ -32,7 +52,7 @@ if (Test-Path $ova) { throw "$ova already exists" }
 # nomacs: every import gets new MAC addresses, so two copies (Ubuntu A and B)
 # can share the NAT Network
 $exportArgs = @('export', $VmName, '--output', $ova, '--ovf20', '--options', 'manifest,nomacs',
-                '--vsys', '0', '--vmname', $Name, '--product', 'Cyberbezpieczenstwo',
+                '--vsys', '0', '--vmname', $Name, '--product', 'Cybersecurity',
                 '--description', 'Login: stud / stud')
 if ($Version) { $exportArgs += @('--version', $Version) }
 & $vbm @exportArgs
